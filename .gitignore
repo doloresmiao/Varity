@@ -3,3 +3,8 @@ __pycache__
 _tests*
 *.exe
 *.c
+
+# Modified
+.idea/
+.DS_Store
+# Modified
