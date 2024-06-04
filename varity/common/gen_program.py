@@ -456,6 +456,7 @@ class Program():
 
     def printCode(self, device=False, hip=False) -> (str, str):
         self.device = device
+        self.hip = hip
         c = self.printHeader()
         # call the function
         if not self.device and not self.hip:
