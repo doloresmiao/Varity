@@ -26,7 +26,7 @@ TESTS_PER_GROUP = 5
 # where x is a string with the compiler name, and y is the path to the compiler
 #COMPILERS = [("clang_80", "/usr/tce/packages/clang/clang-upstream-2019.03.26/bin/clang"), ("gcc_721", "/usr/tce/packages/gcc/gcc-7.2.1-redhat/bin/gcc"), ("xlc", "/usr/tce/packages/xl/xl-2019.02.07/bin/xlc"), ("nvcc_92", "/usr/tce/packages/cuda/cuda-9.2.148/bin/nvcc")]
 # COMPILERS = [("clang_7", "/Users/lagunaperalt1/projects/GPU_work/latest_llvm/llvm-7.0/install/bin/clang"), ("gcc_7", "/opt/local/bin/gcc-mp-7")]
-COMPILERS = [("my_clang", ""), ("my_gcc", "")]
+COMPILERS = [("my_clang", "/usr/bin/clang"), ("my_gcc", "/usr/bin/gcc"), ("my_nvcc", "/usr/bin/nvcc")]
 
 # Levels of optimization to try
 # OPT_LEVELS = [("-O0", 1), ("-O0", 0), ("-O1", 0), ("-O2", 0), ("-O3", 0)]

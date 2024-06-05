@@ -49,6 +49,10 @@ def isCUDACompiler(compiler_name):
     return "nvcc" in compiler_name
 
 
+def isHIPCompiler(compiler_name):
+    return "hipcc" in compiler_name
+
+
 def getExtraOptimization(compiler_name, e: int):
     ret = ""
     if "clang" in compiler_name:
@@ -88,8 +92,12 @@ def compileCode(config):
                                  fileName + "-" + compiler_name + op_level + extra_name + ".exe", fileName]
         cmd = " ".join(compilation_arguments)
         # cmd = compiler_path + " " + op_level + " " + more_ops + " " + libs + " -o " + fileName + "-" + compiler_name + op_level + extra_name + ".exe " + fileName
+
         if isCUDACompiler(compiler_name):
             cmd = cmd + "u"
+
+        if isHIPCompiler(compiler_name):
+            cmd = cmd.replace(fileName, fileName.replace(".c", ".hip"))
 
         out = subprocess.check_output(cmd, shell=True)
         os.chdir(pwd)
@@ -129,12 +137,22 @@ def compileTests(path):
     print("Compiling tests...")
     print("Total tests to compile: ", cfg.NUM_GROUPS * cfg.TESTS_PER_GROUP)
 
+    # Check if the compilers exist
+    existing_compilers = []
+    for compiler_name, compiler_path in cfg.COMPILERS:
+        if os.path.exists(compiler_path):
+            existing_compilers.append((compiler_name, compiler_path))
+            print(f"\033[92mCompiler {compiler_name} with path {compiler_path} exists and will be used.\033[0m")
+        else:
+            print(
+                f"\033[1;91mCompiler {compiler_name} with path {compiler_path} does not exist and will be skipped.\033[0m")
+
     compileConfigList = []
     for g in range(cfg.NUM_GROUPS):
         p = path + "/" + cfg.TESTS_DIR + "/_group_" + str(g + 1)
         for t in range(cfg.TESTS_PER_GROUP):
             fileName = "_test_" + str(t + 1) + ".c"
-            for c in cfg.COMPILERS:
+            for c in existing_compilers:
                 compiler_name = c[0]
                 compiler_path = c[1]
                 for opts in cfg.OPT_LEVELS:
@@ -196,5 +214,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-    generateTests()
+    main()
