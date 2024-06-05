@@ -203,7 +203,7 @@ def main():
     if len(sys.argv) == 1:
         dir = generateTests()
         compileTests(dir)
-        runTests(dir)
+        # runTests(dir)
     else:
         if args.generate:
             generateTests()
