@@ -442,6 +442,8 @@ class Program():
 
     def printHeader(self):
         h = "\n/* This is an automatically generated test. Do not modify */\n\n"
+        if self.hip:
+            h = h + "#include <hip/hip_runtime.h>\n"
         h = h + "#include <stdio.h>\n"
         h = h + "#include <stdlib.h>\n"
         h = h + "#include <math.h>\n\n"
@@ -466,7 +468,10 @@ class Program():
             c = c + "  cudaDeviceSynchronize();\n"
         else:  # here we call a device kernel for hip
             c = c + "  hipLaunchKernelGGL(compute, dim3(1), dim3(1), 0, 0, " + self.printFunctionParameters() + ");\n"
-            c = c + "  hipDeviceSynchronize();\n"
+            c = c + "  hipError_t err = hipDeviceSynchronize();\n"
+            c = c + '  if (err != hipSuccess) {\n'
+            c = c + '    printf("hipDeviceSynchronize failed: %s\\n", hipGetErrorString(err));\n'
+            c = c + "  }\n"
 
         # finalize main function
         c = c + "\n  return 0;\n"
