@@ -21,28 +21,25 @@ def writeProgramCode(fileName):
     p = gen_program.Program()
     (code, allTypes) = p.printCode()
     writeInputFile(fileName, allTypes)
-    f = open(fileName, "w")
-    f.write(code)
-    f.close()
+    with open(fileName, "w") as f:
+        f.write(code)
 
     # Write CUDA code
     (code, allTypes) = p.printCode(True)
-    f = open(fileName + "u", "w")
-    f.write(code)
-    f.close()
+    with open(fileName + "u", "w") as f:
+        f.write(code)
 
     # Write HIP code
-    hip_file_name = fileName.replace(".c", ".hip")
     (code, allTypes) = p.printCode(True, hip=True)
-    with open(hip_file_name, "w") as f:
+    with open(fileName.replace(".c", ".hip"), "w") as f:
         f.write(code)
 
 
 def writeInputFile(fileName, allTypes):
-    f = open(fileName + ".input", "w")
-    f.write(type_checking.getTypeString() + ",")
-    f.write(allTypes + "\n")
-    f.close()
+    input_file_name = fileName.rsplit(".", 1)[0] + ".input"
+    with open(input_file_name, "w") as f:
+        f.write(type_checking.getTypeString() + ",")
+        f.write(allTypes + "\n")
 
 
 def isCUDACompiler(compiler_name):
@@ -203,7 +200,7 @@ def main():
     if len(sys.argv) == 1:
         dir = generateTests()
         compileTests(dir)
-        # runTests(dir)
+        runTests(dir)
     else:
         if args.generate:
             generateTests()

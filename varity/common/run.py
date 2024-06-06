@@ -16,18 +16,20 @@ PROG_PER_TEST = {}
 #               ]
 PROG_RESULTS = {}
 
+
 def getInputTypes(fullProgName):
-    #f = fileName.split(".")[0]
-    inputFile = fullProgName+".input"
+    # f = fileName.split(".")[0]
+    inputFile = fullProgName + ".input"
     fd = open(inputFile, 'r')
     types = fd.readlines()[0][:-1].split(",")
-    #print("file: {} types: {}".format(inputFile, types))
+    # print("file: {} types: {}".format(inputFile, types))
     fd.close()
     return types
 
+
 def generateInputs(fullProgName):
     types = getInputTypes(fullProgName)
-    #inGen = gen_inputs.InputGenerator()
+    # inGen = gen_inputs.InputGenerator()
     ret = ""
     for t in types:
         if isTypeReal(t) or isTypeRealPointer(t):
@@ -37,17 +39,22 @@ def generateInputs(fullProgName):
             ret = ret + "5 "
     return ret
 
+
 def getTestName(fullProgName):
     p = fullProgName.split("-")[0]
-    
-    
+
+
 # This finds all the tests (.exe) files for a given program
 # and stores them in a global dict
 def getAllTests(fullProgName):
     global PROG_PER_TEST
     # This is a list of all the tests
-    allTests = glob.glob(fullProgName+"*.exe")
-    PROG_PER_TEST[fullProgName] = allTests
+    # allTests = glob.glob(fullProgName+"*.exe")
+    # PROG_PER_TEST[fullProgName] = allTests
+    base_name = os.path.splitext(fullProgName)[0]
+    allTests = glob.glob(base_name + "*.exe")
+    PROG_PER_TEST[base_name] = allTests
+
 
 '''
 def spawnProc(config):
@@ -95,48 +102,47 @@ def runTests():
     print("")
 '''
 
+
 def runTestsSerial():
     global PROG_PER_TEST, PROG_RESULTS
     print("Total programs: ", len(PROG_PER_TEST.keys()))
     count = 1
-    for k in PROG_PER_TEST.keys():
+    for base_name in PROG_PER_TEST.keys():
         # --- print progress ---
         print("\r--> On program: {}".format(count), end='')
         sys.stdout.flush()
         count = count + 1
         # ----------------------
-        
-        fullProgName = k
+
         results = []
         for n in range(cfg.INPUT_SAMPLES_PER_RUN):
-            inputs = generateInputs(fullProgName)
-            for t in PROG_PER_TEST[k]:
+            inputs = generateInputs(base_name)
+            for exe_file in PROG_PER_TEST[base_name]:
                 try:
-                    cmd = t + " " + inputs
-                    #print ("Running: " + cmd)
+                    cmd = exe_file + " " + inputs
                     out = subprocess.check_output(cmd, shell=True)
                     res = out.decode('ascii')[:-1]
-                    #print("got: " + res)
-                    results.append(t + " " + inputs + " " + res)
+                    results.append(exe_file + " " + inputs + " " + res)
                 except subprocess.CalledProcessError as outexc:
                     print("\nError at runtime:", outexc.returncode, outexc.output)
                     print("CMD", cmd)
                     exit()
-    
-        PROG_RESULTS[k] = results
+
+        PROG_RESULTS[base_name] = results
     print("")
+
 
 def saveResults(rootDir):
     global PROG_RESULTS
- 
-    os.chdir(rootDir)   
+
+    os.chdir(rootDir)
     f = open("./results.json", "w")
-#    f = open(rootDir+"-results.json", "w")
+    #    f = open(rootDir+"-results.json", "w")
     print("{", file=f)
     for k in PROG_RESULTS.keys():
         lastTest = list(PROG_RESULTS.keys())[-1]
         # ----
-        print('  "'+k+'": {', file=f)
+        print('  "' + k + '": {', file=f)
         # First we save the content in a dictionary
         key_input = {}
         for r in PROG_RESULTS[k]:
@@ -152,51 +158,59 @@ def saveResults(rootDir):
                 else:
                     key_input[input][compiler] = {opt: output}
             else:
-                key_input[input] = {compiler: {opt: output} }
+                key_input[input] = {compiler: {opt: output}}
 
         # Second we print it
         for i in key_input.keys():
             lastInput = list(key_input.keys())[-1]
             # ----
-            print('    "'+i+'": {', file=f)
+            print('    "' + i + '": {', file=f)
             for c in key_input[i].keys():
                 lastComp = list(key_input[i].keys())[-1]
                 # ----
-                print('      "'+c+'": {', file=f)
+                print('      "' + c + '": {', file=f)
                 for o in key_input[i][c].keys():
                     val = key_input[i][c][o]
                     lastOpt = list(key_input[i][c].keys())[-1]
-                    line = '        "'+o+'": "' + val
+                    line = '        "' + o + '": "' + val
                     if o != lastOpt:
                         print(line + '",', file=f)
                     else:
                         print(line + '"', file=f)
                 # ----
-                if c != lastComp: print('      },', file=f)
-                else: print('      }', file=f)
+                if c != lastComp:
+                    print('      },', file=f)
+                else:
+                    print('      }', file=f)
             # -----
-            if i != lastInput: print('    },', file=f)
-            else: print('    }', file=f)
+            if i != lastInput:
+                print('    },', file=f)
+            else:
+                print('    }', file=f)
         # ----
-        if k != lastTest: print('  },', file=f)
-        else: print('  }', file=f)
+        if k != lastTest:
+            print('  },', file=f)
+        else:
+            print('  }', file=f)
     print("}", file=f)
     f.close()
-    
+
+
 def run(dir):
     global PROG_PER_TEST
-    
+
     # Walk on the directory tree
     for dirName, subdirList, fileList in os.walk(dir):
         for fname in fileList:
             if fname.endswith('.c'):
-                fullPath = dirName+"/"+fname
+                fullPath = dirName + "/" + fname
                 getAllTests(fullPath)
-    #runTests()
+    # runTests()
     runTestsSerial()
     print("Saving runs results...")
     saveResults(dir)
     print("done")
+
 
 if __name__ == "__main__":
     d = sys.argv[1]
