@@ -430,14 +430,26 @@ class Program():
             vars.append("tmp_" + str(k + 1))
         return ",".join(vars)
 
+    # def printPointerInitFunction(self):
+    #     ret = "\n" + getTypeString() + "* initPointer(" + getTypeString() + " v) {\n"
+    #     ret = ret + "  " + getTypeString() + " *ret = "
+    #     ret = ret + "(" + getTypeString() + "*) malloc(sizeof(" + getTypeString() + ")*" + str(cfg.ARRAY_SIZE) + ");\n"
+    #     ret = ret + "  for(int i=0; i < " + str(cfg.ARRAY_SIZE) + "; ++i)\n"
+    #     ret = ret + "    ret[i] = v;\n"
+    #     ret = ret + "  return ret;\n"
+    #     ret = ret + "}"
+    #     return ret
     def printPointerInitFunction(self):
-        ret = "\n" + getTypeString() + "* initPointer(" + getTypeString() + " v) {\n"
-        ret = ret + "  " + getTypeString() + " *ret = "
-        ret = ret + "(" + getTypeString() + "*) malloc(sizeof(" + getTypeString() + ")*" + str(cfg.ARRAY_SIZE) + ");\n"
-        ret = ret + "  for(int i=0; i < " + str(cfg.ARRAY_SIZE) + "; ++i)\n"
-        ret = ret + "    ret[i] = v;\n"
-        ret = ret + "  return ret;\n"
-        ret = ret + "}"
+        alloc_code = "hipMalloc(&ret, sizeof({0})*{1});".format(getTypeString(), cfg.ARRAY_SIZE) if self.hip else \
+            "ret = ({0}*) malloc(sizeof({0})*{1});".format(getTypeString(), cfg.ARRAY_SIZE)
+        ret = """
+        {0}* initPointer({0} v) {{
+          {0} *ret;
+          {1}
+          for(int i=0; i < {2}; ++i)
+            ret[i] = v;
+          return ret;
+        }}""".format(getTypeString(), alloc_code, str(cfg.ARRAY_SIZE))
         return ret
 
     def printHeader(self):
