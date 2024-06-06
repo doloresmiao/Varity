@@ -443,7 +443,12 @@ class Program():
         if self.hip:
             ret = getTypeString() + "* initPointer(" + getTypeString() + " v) {\n"
             ret += "    " + getTypeString() + " *ret;\n"
-            ret += "    hipMalloc(&ret, sizeof(" + getTypeString() + ")*" + str(cfg.ARRAY_SIZE) + ");\n"
+            ret += "    hipError_t err = hipMalloc(&ret, sizeof(" + getTypeString() + ")*" + str(
+                cfg.ARRAY_SIZE) + ");\n"
+            ret += "    if (err != hipSuccess) {\n"
+            ret += "        printf(\"hipMalloc failed: %s\\n\", hipGetErrorString(err));\n"
+            ret += "        return NULL;\n"
+            ret += "    }\n"
             ret += "    for(int i=0; i < " + str(cfg.ARRAY_SIZE) + "; ++i)\n"
             ret += "        ret[i] = v;\n"
             ret += "    return ret;\n"
