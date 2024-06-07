@@ -190,11 +190,16 @@ def runTests(dir):
     run.run(dir)
 
 
+def saved_run(dir):
+    run.saved_run(dir)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-g", "--generate", help="generate programs", action="store_true")
     parser.add_argument("-c", "--compile", type=str, help="compile programs in dir: COMPILE")
     parser.add_argument("-r", "--run", type=str, help="run programs in dir: RUN")
+    parser.add_argument("-re", "--rerun", type=str, help="run saved programs in dir: RUN")
     args = parser.parse_args()
 
     if len(sys.argv) == 1:
@@ -208,6 +213,8 @@ def main():
             compileTests(args.compile)
         if args.run:
             runTests(args.run)
+        if args.rerun:
+            saved_run(args.rerun)
 
 
 if __name__ == '__main__':
