@@ -4,32 +4,24 @@ import glob
 import subprocess
 import gen_inputs
 import cfg
-import socket
-from type_checking import isTypeReal, isTypeRealPointer
+import json
 import multiprocessing as mp
 
-PROG_PER_TEST = {}
+from type_checking import isTypeReal, isTypeRealPointer
 
-# "test.c" ->   [
-#               ("test-1.exe", "input", "result"),
-#               ("test-2.exe", "input", "result")
-#               ]
+PROG_PER_TEST = {}
 PROG_RESULTS = {}
 
 
 def getInputTypes(fullProgName):
-    # f = fileName.split(".")[0]
     inputFile = fullProgName + ".input"
-    fd = open(inputFile, 'r')
-    types = fd.readlines()[0][:-1].split(",")
-    # print("file: {} types: {}".format(inputFile, types))
-    fd.close()
+    with open(inputFile, 'r') as fd:
+        types = fd.readlines()[0][:-1].split(",")
     return types
 
 
 def generateInputs(fullProgName):
     types = getInputTypes(fullProgName)
-    # inGen = gen_inputs.InputGenerator()
     ret = ""
     for t in types:
         if isTypeReal(t) or isTypeRealPointer(t):
@@ -40,23 +32,13 @@ def generateInputs(fullProgName):
     return ret
 
 
-def getTestName(fullProgName):
-    p = fullProgName.split("-")[0]
-
-
-# This finds all the tests (.exe) files for a given program
-# and stores them in a global dict
 def getAllTests(fullProgName):
     global PROG_PER_TEST
-    # This is a list of all the tests
-    # allTests = glob.glob(fullProgName+"*.exe")
-    # PROG_PER_TEST[fullProgName] = allTests
     base_name = os.path.splitext(fullProgName)[0]
     allTests = glob.glob(base_name + "*.exe")
     PROG_PER_TEST[base_name] = allTests
 
 
-'''
 def spawnProc(config):
     (cmd, results, lock) = config
     try:
@@ -70,15 +52,15 @@ def spawnProc(config):
         print("CMD", cmd)
         exit()
 
+
 def runTests():
     global PROG_PER_TEST, PROG_RESULTS
     print("Total programs: ", len(PROG_PER_TEST.keys()))
     manager = mp.Manager()
     lock = manager.Lock()
-    #cpuCount = mp.cpu_count()
     cpuCount = 16
     c = 1
-    
+
     for k in PROG_PER_TEST.keys():
         fullProgName = k
         results = manager.list()
@@ -89,31 +71,32 @@ def runTests():
                 cmd = t + " " + inputs
                 config = (cmd, results, lock)
                 inputsList.append(config)
-    
+
         for i in range(0, len(inputsList), cpuCount):
             print("\r--> Running program: {}".format(c), end='')
             sys.stdout.flush()
-            workLoad = inputsList[i:i+cpuCount]
+            workLoad = inputsList[i:i + cpuCount]
             with mp.Pool(cpuCount) as myPool:
                 myPool.map(spawnProc, workLoad)
 
         PROG_RESULTS[k] = results
         c = c + 1
     print("")
-'''
 
 
 def runTestsSerial():
     global PROG_PER_TEST, PROG_RESULTS
+
     print("Total programs: ", len(PROG_PER_TEST.keys()))
     count = 1
     for base_name in PROG_PER_TEST.keys():
+
         # --- print progress ---
         print("\r--> On program: {}".format(count), end='')
         sys.stdout.flush()
         count = count + 1
-        # ----------------------
 
+        # ----------------------
         results = []
         for n in range(cfg.INPUT_SAMPLES_PER_RUN):
             inputs = generateInputs(base_name)
@@ -123,12 +106,14 @@ def runTestsSerial():
                     out = subprocess.check_output(cmd, shell=True)
                     res = out.decode('ascii')[:-1]
                     results.append(exe_file + " " + inputs + " " + res)
+
                 except subprocess.CalledProcessError as outexc:
                     print("\nError at runtime:", outexc.returncode, outexc.output)
                     print("CMD", cmd)
                     exit()
 
         PROG_RESULTS[base_name] = results
+
     print("")
 
 
@@ -136,87 +121,128 @@ def saveResults(rootDir):
     global PROG_RESULTS
 
     os.chdir(rootDir)
-    f = open("./results.json", "w")
-    #    f = open(rootDir+"-results.json", "w")
-    print("{", file=f)
-    for k in PROG_RESULTS.keys():
-        lastTest = list(PROG_RESULTS.keys())[-1]
-        # ----
-        print('  "' + k + '": {', file=f)
-        # First we save the content in a dictionary
-        key_input = {}
-        for r in PROG_RESULTS[k]:
-            compiler = r.split()[0].split('-')[1]
-            opt = r.split()[0].split('-')[2].split('.')[0]
-            input = ",".join(r.split()[1:-1])
-            output = r.split()[-1:][0]
+    with open("./results.json", "w") as f:
+        print("{", file=f)
+        for k in PROG_RESULTS.keys():
+            lastTest = list(PROG_RESULTS.keys())[-1]
+            print('  "' + k + '": {', file=f)
+            key_input = {}
+            for r in PROG_RESULTS[k]:
+                compiler = r.split()[0].split('-')[1]
+                opt = r.split()[0].split('-')[2].split('.')[0]
+                input = ",".join(r.split()[1:-1])
+                output = r.split()[-1:][0]
 
-            if input in key_input.keys():
-                key_comp = key_input[input]
-                if compiler in key_comp.keys():
-                    key_input[input][compiler][opt] = output
-                else:
-                    key_input[input][compiler] = {opt: output}
-            else:
-                key_input[input] = {compiler: {opt: output}}
-
-        # Second we print it
-        for i in key_input.keys():
-            lastInput = list(key_input.keys())[-1]
-            # ----
-            print('    "' + i + '": {', file=f)
-            for c in key_input[i].keys():
-                lastComp = list(key_input[i].keys())[-1]
-                # ----
-                print('      "' + c + '": {', file=f)
-                for o in key_input[i][c].keys():
-                    val = key_input[i][c][o]
-                    lastOpt = list(key_input[i][c].keys())[-1]
-                    line = '        "' + o + '": "' + val
-                    if o != lastOpt:
-                        print(line + '",', file=f)
+                if input in key_input.keys():
+                    key_comp = key_input[input]
+                    if compiler in key_comp.keys():
+                        key_input[input][compiler][opt] = output
                     else:
-                        print(line + '"', file=f)
-                # ----
-                if c != lastComp:
-                    print('      },', file=f)
+                        key_input[input][compiler] = {opt: output}
                 else:
-                    print('      }', file=f)
-            # -----
-            if i != lastInput:
-                print('    },', file=f)
+                    key_input[input] = {compiler: {opt: output}}
+
+            for i in key_input.keys():
+                lastInput = list(key_input.keys())[-1]
+                print('    "' + i + '": {', file=f)
+                for c in key_input[i].keys():
+                    lastComp = list(key_input[i].keys())[-1]
+                    print('      "' + c + '": {', file=f)
+                    for o in key_input[i][c].keys():
+                        val = key_input[i][c][o]
+                        lastOpt = list(key_input[i][c].keys())[-1]
+                        line = '        "' + o + '": "' + val
+                        if o != lastOpt:
+                            print(line + '",', file=f)
+                        else:
+                            print(line + '"', file=f)
+                    if c != lastComp:
+                        print('      },', file=f)
+                    else:
+                        print('      }', file=f)
+                if i != lastInput:
+                    print('    },', file=f)
+                else:
+                    print('    }', file=f)
+            if k != lastTest:
+                print('  },', file=f)
             else:
-                print('    }', file=f)
-        # ----
-        if k != lastTest:
-            print('  },', file=f)
-        else:
-            print('  }', file=f)
-    print("}", file=f)
-    f.close()
+                print('  }', file=f)
+        print("}", file=f)
 
 
 def run(dir):
     global PROG_PER_TEST
 
-    # Walk on the directory tree
     for dirName, subdirList, fileList in os.walk(dir):
         for fname in fileList:
             if fname.endswith('.c'):
                 fullPath = dirName + "/" + fname
                 getAllTests(fullPath)
-    # runTests()
     runTestsSerial()
     print("Saving runs results...")
     saveResults(dir)
     print("done")
 
 
-
 def saved_run(dir):
+    global PROG_PER_TEST
 
-    print("done!")
+    results_file = os.path.join(dir, "results.json")
+    if not os.path.exists(results_file):
+        print("No results saved. Run the basic -r.")
+        return
 
+    with open(results_file, "r") as f:
+        saved_results = json.load(f)
+
+    for dirName, subdirList, fileList in os.walk(dir):
+        for fname in fileList:
+            if fname.endswith('.c'):
+                fullPath = dirName + "/" + fname
+                getAllTests(fullPath)
+
+    for fullProgName in PROG_PER_TEST.keys():
+        if fullProgName not in saved_results:
+            continue
+
+        for t in PROG_PER_TEST[fullProgName]:
+            base_name = fullProgName.split("-")[0]
+            compiler_name = t.split("-")[1]
+            opt_level = t.split("-")[2].split(".")[0]
+
+            inputsList = []
+            for input_vals in saved_results[base_name].keys():
+                if compiler_name in saved_results[base_name][input_vals]:
+                    if opt_level in saved_results[base_name][input_vals][compiler_name]:
+                        continue
+                cmd = t + " " + input_vals.replace(",", " ")
+                inputsList.append((cmd, input_vals))
+
+            manager = mp.Manager()
+            results = manager.list()
+            lock = manager.Lock()
+
+            cpuCount = mp.cpu_count()
+            for i in range(0, len(inputsList), cpuCount):
+                workLoad = inputsList[i:i + cpuCount]
+                with mp.Pool(cpuCount) as myPool:
+                    myPool.map(spawnProc, [(cmd, results, lock) for cmd, _ in workLoad])
+
+            for cmd, input_vals in inputsList:
+                for result in results:
+                    if cmd in result:
+                        res = result.split(" ")[-1]
+                        if input_vals not in saved_results[base_name]:
+                            saved_results[base_name][input_vals] = {}
+                        if compiler_name not in saved_results[base_name][input_vals]:
+                            saved_results[base_name][input_vals][compiler_name] = {}
+                        saved_results[base_name][input_vals][compiler_name][opt_level] = res
+
+    with open(results_file, "w") as f:
+        json.dump(saved_results, f, indent=2)
+
+    print("Saved runs updated successfully.")
 
 
 if __name__ == "__main__":
