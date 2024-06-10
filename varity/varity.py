@@ -198,6 +198,10 @@ def check_divergence(dir, compiler_one, compiler_two):
     run.check_divergence(dir, compiler_one, compiler_two)
 
 
+def get_summary(dir):
+    run.report_discrepancies(dir)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-g", "--generate", help="generate programs", action="store_true")
@@ -206,6 +210,7 @@ def main():
     parser.add_argument("-re", "--rerun", type=str, help="run saved programs in dir: RERUN")
     parser.add_argument("-d", "--divergence", nargs=3, metavar=("DIVERGENCE", "COMPILER_ONE", "COMPILER_TWO"),
                         help="check divergence in dir: DIVERGENCE using COMPILER_ONE and COMPILER_TWO")
+    parser.add_argument("-s", "--summary", type=str, help="summarise and make a report in dir: SUMMARY")
 
     args = parser.parse_args()
 
@@ -225,6 +230,8 @@ def main():
         if args.divergence:
             divergence_dir, compiler_one, compiler_two = args.divergence
             check_divergence(divergence_dir, compiler_one, compiler_two)
+        if args.summary:
+            get_summary(args.summary)
 
 
 if __name__ == '__main__':
