@@ -196,6 +196,8 @@ def saved_run(dir):
     with open(results_file, "r") as f:
         saved_results = json.load(f)
 
+    print("Looking for new executables...")
+
     for dirName, subdirList, fileList in os.walk(dir):
         for fname in fileList:
             if fname.endswith('.c'):
@@ -245,6 +247,13 @@ def saved_run(dir):
     print("The results.json is updated successfully after rerunning on different machine!")
 
 
+import json
+import os
+
+import json
+import os
+
+
 def check_divergence(folder_path, compiler_one, compiler_two):
     results_file = os.path.join(folder_path, "results.json")
     divergences_file = os.path.join(folder_path, "divergences.json")
@@ -256,7 +265,30 @@ def check_divergence(folder_path, compiler_one, compiler_two):
     with open(results_file, "r") as f:
         results = json.load(f)
 
+    print("Looking for the differences...")
+
     divergences = {}
+    compiler_one_missing = True
+    compiler_two_missing = True
+
+    for base_name, inputs in results.items():
+        for input_vals, compilers in inputs.items():
+            if compiler_one in compilers:
+                compiler_one_missing = False
+            if compiler_two in compilers:
+                compiler_two_missing = False
+            if not compiler_one_missing and not compiler_two_missing:
+                break
+        if not compiler_one_missing and not compiler_two_missing:
+            break
+
+    if compiler_one_missing:
+        print(f"Compiler {compiler_one} is missing in the results.json!")
+        return
+
+    if compiler_two_missing:
+        print(f"Compiler {compiler_two} is missing in the results.json!")
+        return
 
     for base_name, inputs in results.items():
         for input_vals, compilers in inputs.items():
@@ -281,6 +313,7 @@ def check_divergence(folder_path, compiler_one, compiler_two):
         json.dump(divergences, f, indent=2)
 
     print("Divergences saved to divergences.json!")
+
 
 if __name__ == "__main__":
     d = sys.argv[1]
