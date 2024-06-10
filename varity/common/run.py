@@ -190,7 +190,7 @@ def saved_run(dir):
 
     results_file = os.path.join(dir, "results.json")
     if not os.path.exists(results_file):
-        print("No results saved. Run the basic -r.")
+        print("No results saved. Run the basic -r!")
         return
 
     with open(results_file, "r") as f:
@@ -242,8 +242,45 @@ def saved_run(dir):
     with open(results_file, "w") as f:
         json.dump(saved_results, f, indent=2)
 
-    print("Saved runs updated successfully.")
+    print("The results.json is updated successfully after rerunning on different machine!")
 
+
+def check_divergence(folder_path, compiler_one, compiler_two):
+    results_file = os.path.join(folder_path, "results.json")
+    divergences_file = os.path.join(folder_path, "divergences.json")
+
+    if not os.path.exists(results_file):
+        print("No results.json found in the specified folder!")
+        return
+
+    with open(results_file, "r") as f:
+        results = json.load(f)
+
+    divergences = {}
+
+    for base_name, inputs in results.items():
+        for input_vals, compilers in inputs.items():
+            if compiler_one in compilers and compiler_two in compilers:
+                for opt_level in compilers[compiler_one]:
+                    if opt_level in compilers[compiler_two]:
+                        result_one = compilers[compiler_one][opt_level]
+                        result_two = compilers[compiler_two][opt_level]
+                        if result_one != result_two:
+                            if base_name not in divergences:
+                                divergences[base_name] = {}
+                            if input_vals not in divergences[base_name]:
+                                divergences[base_name][input_vals] = {}
+                            if compiler_one not in divergences[base_name][input_vals]:
+                                divergences[base_name][input_vals][compiler_one] = {}
+                            if compiler_two not in divergences[base_name][input_vals]:
+                                divergences[base_name][input_vals][compiler_two] = {}
+                            divergences[base_name][input_vals][compiler_one][opt_level] = result_one
+                            divergences[base_name][input_vals][compiler_two][opt_level] = result_two
+
+    with open(divergences_file, "w") as f:
+        json.dump(divergences, f, indent=2)
+
+    print("Divergences saved to divergences.json!")
 
 if __name__ == "__main__":
     d = sys.argv[1]

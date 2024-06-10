@@ -194,12 +194,19 @@ def saved_run(dir):
     run.saved_run(dir)
 
 
+def check_divergence(dir, compiler_one, compiler_two):
+    run.check_divergence(dir, compiler_one, compiler_two)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-g", "--generate", help="generate programs", action="store_true")
     parser.add_argument("-c", "--compile", type=str, help="compile programs in dir: COMPILE")
     parser.add_argument("-r", "--run", type=str, help="run programs in dir: RUN")
-    parser.add_argument("-re", "--rerun", type=str, help="run saved programs in dir: RUN")
+    parser.add_argument("-re", "--rerun", type=str, help="run saved programs in dir: RERUN")
+    parser.add_argument("-d", "--divergence", nargs=3, metavar=("DIVERGENCE", "COMPILER_ONE", "COMPILER_TWO"),
+                        help="check divergence in dir: DIVERGENCE using COMPILER_ONE and COMPILER_TWO")
+
     args = parser.parse_args()
 
     if len(sys.argv) == 1:
@@ -215,6 +222,9 @@ def main():
             runTests(args.run)
         if args.rerun:
             saved_run(args.rerun)
+        if args.divergence:
+            divergence_dir, compiler_one, compiler_two = args.divergence
+            check_divergence(divergence_dir, compiler_one, compiler_two)
 
 
 if __name__ == '__main__':
