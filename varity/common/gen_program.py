@@ -440,7 +440,23 @@ class Program():
     #     ret = ret + "}"
     #     return ret
     def printPointerInitFunction(self):
-        if self.hip:
+        if self.device:
+            if self.hip:
+                ret = getTypeString() + "* initPointer(" + getTypeString() + " v) {\n"
+                ret += "    " + getTypeString() + " *ret;\n"
+                ret += "    cudaError_t err = cudaMalloc((void**)&ret, sizeof(" + getTypeString() + ")*" + str(
+                    cfg.ARRAY_SIZE) + ");\n"
+                ret += "    if (err != cudaSuccess) {\n"
+                ret += "        printf(\"cudaMalloc failed: %s\\n\", cudaGetErrorString(err));\n"
+                ret += "        return NULL;\n"
+                ret += "    }\n"
+                # ret += "    double temp[10];\n"
+                ret += "    for(int i=0; i < " + str(cfg.ARRAY_SIZE) + "; ++i)\n"
+                ret += "        ret[i] = v;\n"
+                # ret += "    cudaMemcpy(ret, temp, sizeof(double) * "+ str(cfg.ARRAY_SIZE) +", cudaMemcpyHostToDevice);\n"
+                ret += "    return ret;\n"
+                ret += "}"
+        elif self.hip:
             ret = getTypeString() + "* initPointer(" + getTypeString() + " v) {\n"
             ret += "    " + getTypeString() + " *ret;\n"
             ret += "    hipError_t err = hipMalloc(&ret, sizeof(" + getTypeString() + ")*" + str(
@@ -449,17 +465,16 @@ class Program():
             ret += "        printf(\"hipMalloc failed: %s\\n\", hipGetErrorString(err));\n"
             ret += "        return NULL;\n"
             ret += "    }\n"
+            # ret += "    double temp[10];\n"
             ret += "    for(int i=0; i < " + str(cfg.ARRAY_SIZE) + "; ++i)\n"
             ret += "        ret[i] = v;\n"
+            # ret += "    hipMemcpy(ret, temp, sizeof(double) * "+ str(cfg.ARRAY_SIZE) +", hipMemcpyHostToDevice);\n"
             ret += "    return ret;\n"
             ret += "}"
         else:
             ret = getTypeString() + "* initPointer(" + getTypeString() + " v) {\n"
             ret += "    " + getTypeString() + " *ret = "
-            if self.device:
-                ret += "(" + getTypeString() + "*) cudaMalloc(sizeof(" + getTypeString() + ")*" + str(cfg.ARRAY_SIZE) + ");\n"
-            else:
-                ret += "(" + getTypeString() + "*) malloc(sizeof(" + getTypeString() + ")*" + str(cfg.ARRAY_SIZE) + ");\n"
+            ret += "(" + getTypeString() + "*) malloc(sizeof(" + getTypeString() + ")*" + str(cfg.ARRAY_SIZE) + ");\n"
             ret += "    for(int i=0; i < " + str(cfg.ARRAY_SIZE) + "; ++i)\n"
             ret += "        ret[i] = v;\n"
             ret += "    return ret;\n"
