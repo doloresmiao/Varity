@@ -441,21 +441,20 @@ class Program():
     #     return ret
     def printPointerInitFunction(self):
         if self.device:
-            if self.hip:
-                ret = getTypeString() + "* initPointer(" + getTypeString() + " v) {\n"
-                ret += "    " + getTypeString() + " *ret;\n"
-                ret += "    cudaError_t err = cudaMalloc((void**)&ret, sizeof(" + getTypeString() + ")*" + str(
-                    cfg.ARRAY_SIZE) + ");\n"
-                ret += "    if (err != cudaSuccess) {\n"
-                ret += "        printf(\"cudaMalloc failed: %s\\n\", cudaGetErrorString(err));\n"
-                ret += "        return NULL;\n"
-                ret += "    }\n"
-                # ret += "    double temp[10];\n"
-                ret += "    for(int i=0; i < " + str(cfg.ARRAY_SIZE) + "; ++i)\n"
-                ret += "        ret[i] = v;\n"
-                # ret += "    cudaMemcpy(ret, temp, sizeof(double) * "+ str(cfg.ARRAY_SIZE) +", cudaMemcpyHostToDevice);\n"
-                ret += "    return ret;\n"
-                ret += "}"
+            ret = getTypeString() + "* initPointer(" + getTypeString() + " v) {\n"
+            ret += "    " + getTypeString() + " *ret;\n"
+            ret += "    cudaError_t err = cudaMalloc((void**)&ret, sizeof(" + getTypeString() + ")*" + str(
+                cfg.ARRAY_SIZE) + ");\n"
+            ret += "    if (err != cudaSuccess) {\n"
+            ret += "        printf(\"cudaMalloc failed: %s\\n\", cudaGetErrorString(err));\n"
+            ret += "        return NULL;\n"
+            ret += "    }\n"
+            # ret += "    double temp[10];\n"
+            ret += "    for(int i=0; i < " + str(cfg.ARRAY_SIZE) + "; ++i)\n"
+            ret += "        ret[i] = v;\n"
+            # ret += "    cudaMemcpy(ret, temp, sizeof(double) * "+ str(cfg.ARRAY_SIZE) +", cudaMemcpyHostToDevice);\n"
+            ret += "    return ret;\n"
+            ret += "}"
         elif self.hip:
             ret = getTypeString() + "* initPointer(" + getTypeString() + " v) {\n"
             ret += "    " + getTypeString() + " *ret;\n"
