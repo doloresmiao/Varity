@@ -245,7 +245,7 @@ class BooleanExpression(Node):
         return self.left + self.code + self.right.printCode(False)
 
 
-class FoorLoopCondition(Node):
+class ForLoopCondition(Node):
     def __init__(self, code="", left=None, right=None):
         self.code = "int i=0; i < " + id_generator.IdGenerator.get().generateIntID() + "; ++i"
 
@@ -287,7 +287,7 @@ class ForLoopBlock(Node):
         self.rec = recursive
 
         # Generate code of the loop condition
-        self.code = FoorLoopCondition()
+        self.code = ForLoopCondition()
         # self.left = OperationsBlock()
         self.left = left
         self.right = None
@@ -456,7 +456,10 @@ class Program():
         else:
             ret = getTypeString() + "* initPointer(" + getTypeString() + " v) {\n"
             ret += "    " + getTypeString() + " *ret = "
-            ret += "(" + getTypeString() + "*) malloc(sizeof(" + getTypeString() + ")*" + str(cfg.ARRAY_SIZE) + ");\n"
+            if self.device:
+                ret += "(" + getTypeString() + "*) cudaMalloc(sizeof(" + getTypeString() + ")*" + str(cfg.ARRAY_SIZE) + ");\n"
+            else:
+                ret += "(" + getTypeString() + "*) malloc(sizeof(" + getTypeString() + ")*" + str(cfg.ARRAY_SIZE) + ");\n"
             ret += "    for(int i=0; i < " + str(cfg.ARRAY_SIZE) + "; ++i)\n"
             ret += "        ret[i] = v;\n"
             ret += "    return ret;\n"
