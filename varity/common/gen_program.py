@@ -440,7 +440,7 @@ class Program():
     #     ret = ret + "}"
     #     return ret
     def printPointerInitFunction(self):
-        if self.device:
+        if self.device and not self.hip:
             ret = getTypeString() + "* initPointer(" + getTypeString() + " v) {\n"
             ret += "    " + getTypeString() + " *ret;\n"
             ret += "    cudaError_t err = cudaMalloc((void**)&ret, sizeof(" + getTypeString() + ")*" + str(
