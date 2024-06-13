@@ -469,7 +469,7 @@ class Program():
             ret += "        temp[i] = v;\n"
             ret += "    err = hipMemcpy(ret, temp, sizeof(double) * " + str(cfg.ARRAY_SIZE) + ", hipMemcpyHostToDevice);\n"
             ret += "    if (err != hipSuccess) {\n"
-            ret += "        printf(\"hipMemcpy failed: %s\n\", hipGetErrorString(err));\n"
+            ret += "        printf(\"hipMemcpy failed: %s\", hipGetErrorString(err));\n"
             ret += "        hipFree(ret);\n"
             ret += "        return NULL;\n"
             ret += "    }\n"
