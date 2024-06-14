@@ -16,10 +16,10 @@ MATH_FUNC_PROBABILITY = 0.05
 
 # Number of directories per experiment.
 # Each directory is a group.
-NUM_GROUPS = 2
+NUM_GROUPS = 5
 
 # Number of tests per group
-TESTS_PER_GROUP = 10
+TESTS_PER_GROUP = 20
 
 # Set of commpilers to test.
 # COMPILERS is a list containing tuples (x, y), 
