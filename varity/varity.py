@@ -85,16 +85,24 @@ def compileCode(config):
         extra_name = ""
         if other_op == 1:
             extra_name = "_nofma"
+
+        if isCUDACompiler(compiler_name):
+            fileName = fileName + "u"
+
+        if isHIPCompiler(compiler_name):
+            fileName = fileName.replace(".c", ".hip")
+
+
         compilation_arguments = [compiler_path, op_level, more_ops, libs, "-o",
                                  fileName + "-" + compiler_name + op_level + extra_name + ".exe", fileName]
         cmd = " ".join(compilation_arguments)
         # cmd = compiler_path + " " + op_level + " " + more_ops + " " + libs + " -o " + fileName + "-" + compiler_name + op_level + extra_name + ".exe " + fileName
 
-        if isCUDACompiler(compiler_name):
-            cmd = cmd + "u"
-
-        if isHIPCompiler(compiler_name):
-            cmd = cmd.replace(fileName, fileName.replace(".c", ".hip"))
+        # if isCUDACompiler(compiler_name):
+        #     cmd = cmd + "u"
+        #
+        # if isHIPCompiler(compiler_name):
+        #     cmd = cmd.replace(fileName, fileName.replace(".c", ".hip"))
 
         out = subprocess.check_output(cmd, shell=True)
         os.chdir(pwd)
