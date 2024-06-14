@@ -30,7 +30,7 @@ def generateInputs(fullProgName):
         elif t == "int":
             ret = ret + "5 "
         else:
-            print("I'm the culprit! : " + ret + ", " + t)
+            print("Can get the segmentation error because of input miss-match! : " + ret + ", " + t)
     return ret
 
 
@@ -105,6 +105,7 @@ def runTestsSerial():
             for exe_file in PROG_PER_TEST[base_name]:
                 try:
                     cmd = exe_file + " " + inputs
+                    print(cmd)
                     out = subprocess.check_output(cmd, shell=True)
                     res = out.decode('ascii')[:-1]
                     results.append(exe_file + " " + inputs + " " + res)
@@ -242,6 +243,7 @@ def saved_run(dir):
                         if compiler_name not in saved_results[base_name][input_vals]:
                             saved_results[base_name][input_vals][compiler_name] = {}
                         saved_results[base_name][input_vals][compiler_name][opt_level] = res
+            print("inputList: ", inputsList)
 
     with open(results_file, "w") as f:
         json.dump(saved_results, f, indent=2)
