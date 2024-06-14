@@ -29,6 +29,8 @@ def generateInputs(fullProgName):
             ret = ret + i + " "
         elif t == "int":
             ret = ret + "5 "
+        else:
+            print("I'm the culprit! : " + ret + ", " + t)
     return ret
 
 
