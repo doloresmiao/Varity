@@ -2,6 +2,8 @@ import os
 import sys
 import glob
 import subprocess
+import time
+
 import gen_inputs
 import cfg
 import json
@@ -11,6 +13,7 @@ from type_checking import isTypeReal, isTypeRealPointer
 
 PROG_PER_TEST = {}
 PROG_RESULTS = {}
+RECORD_RUNTIME = True
 
 
 def getInputTypes(fullProgName):
@@ -43,10 +46,22 @@ def getAllTests(fullProgName):
 def spawnProc(config):
     (cmd, results, lock) = config
     try:
-        out = subprocess.check_output(cmd, shell=True)
+        if RECORD_RUNTIME:
+            start_time = time.perf_counter()
+            out = subprocess.check_output(cmd, shell=True)
+            end_time = time.perf_counter()
+            runtime = int((end_time - start_time) * 1e6)  # Calculate runtime in microseconds
+        else:
+            out = subprocess.check_output(cmd, shell=True)
+
         res = out.decode('ascii')[:-1]
         lock.acquire()
-        results.append(cmd + " " + res)
+
+        if RECORD_RUNTIME:
+            results.append(cmd + " " + res + " time:" + str(runtime))
+        else:
+            results.append(cmd + " " + res)
+
         lock.release()
     except subprocess.CalledProcessError as outexc:
         print("\nError at runtime:", outexc.returncode, outexc.output)
@@ -104,9 +119,19 @@ def runTestsSerial():
             for exe_file in PROG_PER_TEST[base_name]:
                 try:
                     cmd = exe_file + " " + inputs
-                    out = subprocess.check_output(cmd, shell=True)
+                    if RECORD_RUNTIME:
+                        start_time = time.perf_counter()
+                        out = subprocess.check_output(cmd, shell=True)
+                        end_time = time.perf_counter()
+                        runtime = int((end_time - start_time) * 1e6)
+                    else:
+                        out = subprocess.check_output(cmd, shell=True)
+
                     res = out.decode('ascii')[:-1]
-                    results.append(exe_file + " " + inputs + " " + res)
+                    if RECORD_RUNTIME:
+                        results.append(exe_file + " " + inputs + " " + res + " time:" + str(runtime))
+                    else:
+                        results.append(exe_file + " " + inputs + " " + res)
 
                 except subprocess.CalledProcessError as outexc:
                     print("\nError at runtime:", outexc.returncode, outexc.output)
@@ -129,19 +154,36 @@ def saveResults(rootDir):
             print('  "' + k + '": {', file=f)
             key_input = {}
             for r in PROG_RESULTS[k]:
-                compiler = r.split()[0].split('-')[1]
-                opt = r.split()[0].split('-')[2].split('.')[0]
-                input = ",".join(r.split()[1:-1])
-                output = r.split()[-1:][0]
+                if RECORD_RUNTIME:
+                    parts = r.split()
+                    compiler = parts[0].split('-')[1]
+                    opt = parts[0].split('-')[2].split('.')[0]
+                    input = " ".join(parts[1:-2])
+                    output = parts[-2]
+                    runtime = parts[-1]
+                else:
+                    compiler = r.split()[0].split('-')[1]
+                    opt = r.split()[0].split('-')[2].split('.')[0]
+                    input = " ".join(r.split()[1:-1])
+                    output = r.split()[-1:][0]
 
                 if input in key_input.keys():
                     key_comp = key_input[input]
                     if compiler in key_comp.keys():
-                        key_input[input][compiler][opt] = output
+                        if RECORD_RUNTIME:
+                            key_input[input][compiler][opt] = output + " " + runtime
+                        else:
+                            key_input[input][compiler][opt] = output
                     else:
-                        key_input[input][compiler] = {opt: output}
+                        if RECORD_RUNTIME:
+                            key_input[input][compiler] = {opt: output + " " + runtime}
+                        else:
+                            key_input[input][compiler] = {opt: output}
                 else:
-                    key_input[input] = {compiler: {opt: output}}
+                    if RECORD_RUNTIME:
+                        key_input[input] = {compiler: {opt: output + " " + runtime}}
+                    else:
+                        key_input[input] = {compiler: {opt: output}}
 
             for i in key_input.keys():
                 lastInput = list(key_input.keys())[-1]
@@ -219,7 +261,7 @@ def saved_run(dir):
                 if compiler_name in saved_results[base_name][input_vals]:
                     if opt_level in saved_results[base_name][input_vals][compiler_name]:
                         continue
-                cmd = t + " " + input_vals.replace(",", " ")
+                cmd = t + " " + input_vals
                 inputsList.append((cmd, input_vals))
 
             manager = mp.Manager()
@@ -235,7 +277,12 @@ def saved_run(dir):
             for cmd, input_vals in inputsList:
                 for result in results:
                     if cmd in result:
-                        res = result.split(" ")[-1]
+                        if RECORD_RUNTIME:
+                            parts = result.split(" ")
+                            res = parts[-2] + " " + parts[-1]
+                        else:
+                            res = result.split(" ")[-1]
+
                         if input_vals not in saved_results[base_name]:
                             saved_results[base_name][input_vals] = {}
                         if compiler_name not in saved_results[base_name][input_vals]:
@@ -291,7 +338,16 @@ def check_divergence(folder_path, compiler_one, compiler_two):
                     if opt_level in compilers[compiler_two]:
                         result_one = compilers[compiler_one][opt_level]
                         result_two = compilers[compiler_two][opt_level]
-                        if result_one != result_two:
+                        if RECORD_RUNTIME:
+                            parts_one = result_one.rsplit(" ", 1)
+                            parts_two = result_two.rsplit(" ", 1)
+                            output_one = parts_one[0]
+                            output_two = parts_two[0]
+                        else:
+                            output_one = result_one
+                            output_two = result_two
+
+                        if output_one != output_two:
                             if base_name not in divergences:
                                 divergences[base_name] = {}
                             if input_vals not in divergences[base_name]:
