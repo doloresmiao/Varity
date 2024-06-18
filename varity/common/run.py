@@ -214,6 +214,50 @@ def saveResults(rootDir):
         print("}", file=f)
 
 
+
+
+def saveRunData(rootDir):
+    num_groups = cfg.NUM_GROUPS
+    tests_per_group = cfg.TESTS_PER_GROUP
+    input_samples_per_run = cfg.INPUT_SAMPLES_PER_RUN
+    total_programs = num_groups * tests_per_group
+    total_runs = total_programs * input_samples_per_run
+
+    user = os.getenv('USER') or os.getenv('USERNAME')
+    if not user:
+        user = "Unknown User"
+
+    run_data = {
+        "Number of groups": num_groups,
+        "Tests per group": tests_per_group,
+        "Input samples per run": input_samples_per_run,
+        "Total programs": total_programs,
+        "Total runs": total_runs,
+        "Directory name": rootDir,
+        "Created By": user,
+        "Created at": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+        "Modified By": "",
+        "Modified at": "",
+    }
+
+    # Problem in the folder path
+    run_data_file = os.path.join(os.getcwd(), "run_data.json")
+
+    if os.path.exists(run_data_file):
+        with open(run_data_file, "r") as f:
+            existing_data = json.load(f)
+
+        # Update the existing data with the new modified info
+        existing_data["Modified By"] = user
+        existing_data["Modified at"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        run_data = existing_data
+
+    with open(run_data_file, "w") as f:
+        json.dump(run_data, f, indent=2)
+
+    print("Run-data saved to run_data.json!")
+
+
 def run(dir):
     global PROG_PER_TEST
 
@@ -225,6 +269,7 @@ def run(dir):
     runTestsSerial()
     print("Saving runs results...")
     saveResults(dir)
+    saveRunData(dir)
     print("done")
 
 
@@ -292,6 +337,7 @@ def saved_run(dir):
     with open(results_file, "w") as f:
         json.dump(saved_results, f, indent=2)
 
+    # saveRunData(dir)
     print("The results.json is updated successfully after rerunning on different machine!")
 
 
