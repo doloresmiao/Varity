@@ -214,9 +214,7 @@ def saveResults(rootDir):
         print("}", file=f)
 
 
-
-
-def saveRunData(rootDir, rerun = False):
+def saveRunData(rootDir, rerun=False):
     num_groups = cfg.NUM_GROUPS
     tests_per_group = cfg.TESTS_PER_GROUP
     input_samples_per_run = cfg.INPUT_SAMPLES_PER_RUN
@@ -413,56 +411,50 @@ def check_divergence(folder_path, compiler_one, compiler_two):
     print("Divergences saved to divergences.json!")
 
 
-def report_discrepancies(dir):
-    divergences_file = os.path.join(dir, "divergences.json")
-    if not os.path.exists(divergences_file):
-        print("No divergences.json found in the specified folder. Run the divergence analysis first.")
-        return
+def report_discrepancies(dirs):
+    report_lines = []
+    header = "Directory\tCompiler\tOption\t\tResult\t\t\tTime\t\tBase_name\n"
+    separator = "-" * 120 + "\n"
+    report_lines.append(header)
+    report_lines.append(separator)
 
-    with open(divergences_file, "r") as f:
-        divergences = json.load(f)
+    for dir in dirs:
+        divergences_file = os.path.join(dir, "divergences.json")
+        run_data_file = os.path.join(dir, "run_data.json")
 
-    total_programs = len(glob.glob(os.path.join(dir, '**/*.c'), recursive=True))
-    total_bugs = sum(len(inputs) for inputs in divergences.values())
+        if not os.path.exists(divergences_file):
+            print(f"No divergences found in {dir}")
+            continue
 
-    report = []
-    report.append("Discrepancy Report\n")
-    report.append("Summary\n")
-    report.append(f"Total number of programs: {total_programs}\n")
-    report.append(f"Total number of bugs found: {total_bugs}\n\n")
+        with open(divergences_file, "r") as f:
+            divergences = json.load(f)
 
-    for base_name, inputs in divergences.items():
-        test_folder = os.path.dirname(base_name)
-        test_file = os.path.basename(base_name)
+        run_data = {}
+        if os.path.exists(run_data_file):
+            with open(run_data_file, "r") as f:
+                run_data = json.load(f)
 
-        c_file_path = os.path.join(test_folder, test_file + ".c")
-        cu_file_path = os.path.join(test_folder, test_file + ".cu")
-        hip_file_path = os.path.join(test_folder, test_file + ".hip")
+        for base_name, inputs in divergences.items():
+            first_entry = True
+            for input_vals, compilers in inputs.items():
+                for compiler, options in compilers.items():
+                    for opt, result in options.items():
+                        result_parts = result.split(" time:")
+                        output = result_parts[0]
+                        run_time = result_parts[1] if len(result_parts) > 1 else "N/A"
+                        if first_entry:
+                            report_lines.append(separator)
+                            first_entry = False
+                        report_lines.append(f"{dir}\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\t\t{base_name}\n")
+                    # report_lines.append("\n")
+                report_lines.append(separator)
+                report_lines.append(separator)
 
-        report.append(f"\nTest: {test_file}\n\n")
+    report_file = "discrepancy_report.txt"
+    with open(report_file, "w") as f:
+        f.writelines(report_lines)
 
-        with open(c_file_path, "r") as f:
-            report.append(f"Content of {test_file}.c:\n" + f.read() + "\n\n")
-        if os.path.exists(cu_file_path):
-            with open(cu_file_path, "r") as f:
-                report.append(f"Content of {test_file}.cu:\n" + f.read() + "\n\n")
-        if os.path.exists(hip_file_path):
-            with open(hip_file_path, "r") as f:
-                report.append(f"Content of {test_file}.hip:\n" + f.read() + "\n\n")
-
-        for input_vals, compilers in inputs.items():
-            report.append(f"\nInput: {input_vals}\n")
-
-            report.append("Compiler | Optimization | Result\n")
-            report.append("-" * 40 + "\n")
-            for compiler, optimizations in compilers.items():
-                for opt_level, result in optimizations.items():
-                    report.append(f"{compiler} | {opt_level} | {result}\n\n")
-
-    with open(os.path.join(dir, "discrepancy_report.txt"), "w") as f:
-        f.writelines(report)
-
-    print("Discrepancy report generated and saved as discrepancy_report.txt.")
+    print(f"Discrepancy report generated and saved as {report_file}.")
 
 
 if __name__ == "__main__":

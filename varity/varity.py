@@ -206,8 +206,8 @@ def check_divergence(dir, compiler_one, compiler_two):
     run.check_divergence(dir, compiler_one, compiler_two)
 
 
-def get_summary(dir):
-    run.report_discrepancies(dir)
+def get_summary(dirs):
+    run.report_discrepancies(dirs)
 
 
 def main():
@@ -218,7 +218,7 @@ def main():
     parser.add_argument("-re", "--rerun", type=str, help="run saved programs in dir: RERUN")
     parser.add_argument("-d", "--divergence", nargs=3, metavar=("DIVERGENCE", "COMPILER_ONE", "COMPILER_TWO"),
                         help="check divergence in dir: DIVERGENCE using COMPILER_ONE and COMPILER_TWO")
-    parser.add_argument("-s", "--summary", type=str, help="summarise and make a report in dir: SUMMARY")
+    parser.add_argument("-s", "--summary", nargs='+', help="summarise and make a report in dirs: SUMMARY")
 
     args = parser.parse_args()
 
