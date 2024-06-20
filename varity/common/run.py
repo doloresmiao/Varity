@@ -413,7 +413,7 @@ def check_divergence(folder_path, compiler_one, compiler_two):
 
 def report_discrepancies(dirs):
     report_lines = []
-    header = "Directory\tCompiler\tOption\t\tResult\t\t\tTime\t\tBase_name\n"
+    header = "Base name\t\t\t\t\tCompiler\tOption\t\tResult\t\t\tTime\t\tInput\n"
     separator = "-" * 120 + "\n"
     report_lines.append(header)
     report_lines.append(separator)
@@ -435,20 +435,22 @@ def report_discrepancies(dirs):
                 run_data = json.load(f)
 
         for base_name, inputs in divergences.items():
+            report_lines.append(f"{base_name}\n")
             first_entry = True
             for input_vals, compilers in inputs.items():
+                if first_entry:
+                    report_lines.append(f"{input_vals}\n")
+                    first_entry = False
+                else:
+                    report_lines.append(f"\t\t\t\t\t\t\t\t\t\t\t\t{input_vals}\n")
                 for compiler, options in compilers.items():
                     for opt, result in options.items():
                         result_parts = result.split(" time:")
                         output = result_parts[0]
                         run_time = result_parts[1] if len(result_parts) > 1 else "N/A"
-                        if first_entry:
-                            report_lines.append(separator)
-                            first_entry = False
-                        report_lines.append(f"{dir}\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\t\t{base_name}\n")
-                    # report_lines.append("\n")
+                        report_lines.append(f"\t\t\t\t\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\n")
                 report_lines.append(separator)
-                report_lines.append(separator)
+            report_lines.append(separator)
 
     report_file = "discrepancy_report.txt"
     with open(report_file, "w") as f:
