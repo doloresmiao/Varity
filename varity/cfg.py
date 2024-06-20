@@ -19,7 +19,7 @@ MATH_FUNC_PROBABILITY = 0.05
 NUM_GROUPS = 2
 
 # Number of tests per group
-TESTS_PER_GROUP = 2
+TESTS_PER_GROUP = 500
 
 # Set of commpilers to test.
 # COMPILERS is a list containing tuples (x, y), 
@@ -46,7 +46,7 @@ TESTS_DIR = "_tests"
 ###############################################################################
 
 # Number of random inputs per run
-INPUT_SAMPLES_PER_RUN = 2
+INPUT_SAMPLES_PER_RUN = 4
 
 ###############################################################################
 # Flaoting-point types

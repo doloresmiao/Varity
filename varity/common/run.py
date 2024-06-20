@@ -44,7 +44,12 @@ def getAllTests(fullProgName):
 
 
 def spawnProc(config):
-    (cmd, results, lock) = config
+    if RECORD_RUNTIME:
+        (cmd, results, lock, batch_runtime) = config
+        compiler_name = cmd.split()[0].split('-')[1]
+    else:
+        (cmd, results, lock) = config
+
     try:
         if RECORD_RUNTIME:
             start_time = time.perf_counter()
@@ -58,6 +63,9 @@ def spawnProc(config):
         lock.acquire()
 
         if RECORD_RUNTIME:
+            if compiler_name not in batch_runtime:
+                batch_runtime[compiler_name] = 0
+            batch_runtime[compiler_name] += runtime
             results.append(cmd + " " + res + " time:" + str(runtime))
         else:
             results.append(cmd + " " + res)
@@ -76,6 +84,7 @@ def runTests():
     lock = manager.Lock()
     cpuCount = 16
     c = 1
+    batch_runtime = manager.dict()
 
     for k in PROG_PER_TEST.keys():
         fullProgName = k
@@ -85,7 +94,10 @@ def runTests():
             inputs = generateInputs(fullProgName)
             for t in PROG_PER_TEST[k]:
                 cmd = t + " " + inputs
-                config = (cmd, results, lock)
+                if RECORD_RUNTIME:
+                    config = (cmd, results, lock, batch_runtime)
+                else:
+                    config = (cmd, results, lock)
                 inputsList.append(config)
 
         for i in range(0, len(inputsList), cpuCount):
@@ -98,6 +110,7 @@ def runTests():
         PROG_RESULTS[k] = results
         c = c + 1
     print("")
+    return dict(batch_runtime)
 
 
 def runTestsSerial():
@@ -105,6 +118,8 @@ def runTestsSerial():
 
     print("Total programs: ", len(PROG_PER_TEST.keys()))
     count = 1
+    batch_runtime = {}
+
     for base_name in PROG_PER_TEST.keys():
 
         # --- print progress ---
@@ -124,6 +139,11 @@ def runTestsSerial():
                         out = subprocess.check_output(cmd, shell=True)
                         end_time = time.perf_counter()
                         runtime = int((end_time - start_time) * 1e6)
+                        compiler_name = cmd.split()[0].split('-')[1]
+                        if compiler_name not in batch_runtime:
+                            batch_runtime[compiler_name] = 0
+                        batch_runtime[compiler_name] += runtime
+
                     else:
                         out = subprocess.check_output(cmd, shell=True)
 
@@ -141,6 +161,7 @@ def runTestsSerial():
         PROG_RESULTS[base_name] = results
 
     print("")
+    return batch_runtime
 
 
 def saveResults(rootDir):
@@ -214,7 +235,7 @@ def saveResults(rootDir):
         print("}", file=f)
 
 
-def saveRunData(rootDir, rerun=False):
+def saveRunData(rootDir, batch_runtime=None, rerun=False):
     num_groups = cfg.NUM_GROUPS
     tests_per_group = cfg.TESTS_PER_GROUP
     input_samples_per_run = cfg.INPUT_SAMPLES_PER_RUN
@@ -228,6 +249,11 @@ def saveRunData(rootDir, rerun=False):
     compilers = {name: path for name, path in cfg.COMPILERS}
     optimization = cfg.OPT_LEVELS
 
+    if batch_runtime:
+        batch_runtime_minutes = {compiler: runtime / (60 * 1e6) for compiler, runtime in batch_runtime.items()}
+    else:
+        batch_runtime_minutes = {}
+
     run_data = {
         "Number of groups": num_groups,
         "Tests per group": tests_per_group,
@@ -237,6 +263,7 @@ def saveRunData(rootDir, rerun=False):
         "Directory name": rootDir,
         "Compilers": compilers,
         "Optimization": optimization,
+        "Batch Runtime (minutes)": batch_runtime_minutes,
         "Created By": user,
         "Created at": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         "Last Modified By": "",
@@ -262,6 +289,8 @@ def saveRunData(rootDir, rerun=False):
 
         existing_data["Compilers"] = existing_compilers
         existing_data["Optimization"] = optimization
+        if batch_runtime_minutes:
+            existing_data["Batch Runtime (minutes)"].update(batch_runtime_minutes)
         run_data = existing_data
 
     with open(run_data_file, "w") as f:
@@ -278,10 +307,10 @@ def run(dir):
             if fname.endswith('.c'):
                 fullPath = dirName + "/" + fname
                 getAllTests(fullPath)
-    runTestsSerial()
+    batch_runtime = runTestsSerial()
     print("Saving runs results...")
     saveResults(dir)
-    saveRunData(dir)
+    saveRunData(dir, batch_runtime=batch_runtime)
     print("done")
 
 
@@ -304,6 +333,11 @@ def saved_run(dir):
                 fullPath = dirName + "/" + fname
                 getAllTests(fullPath)
 
+    manager = mp.Manager()
+    lock = manager.Lock()
+    batch_runtime = manager.dict()
+    cpuCount = mp.cpu_count()
+
     for fullProgName in PROG_PER_TEST.keys():
         if fullProgName not in saved_results:
             continue
@@ -321,15 +355,14 @@ def saved_run(dir):
                 cmd = t + " " + input_vals
                 inputsList.append((cmd, input_vals))
 
-            manager = mp.Manager()
             results = manager.list()
-            lock = manager.Lock()
-
-            cpuCount = mp.cpu_count()
             for i in range(0, len(inputsList), cpuCount):
                 workLoad = inputsList[i:i + cpuCount]
                 with mp.Pool(cpuCount) as myPool:
-                    myPool.map(spawnProc, [(cmd, results, lock) for cmd, _ in workLoad])
+                    if RECORD_RUNTIME:
+                        myPool.map(spawnProc, [(cmd, results, lock, batch_runtime) for cmd, _ in workLoad])
+                    else:
+                        myPool.map(spawnProc, [(cmd, results, lock) for cmd, _ in workLoad])
 
             for cmd, input_vals in inputsList:
                 for result in results:
@@ -349,7 +382,7 @@ def saved_run(dir):
     with open(results_file, "w") as f:
         json.dump(saved_results, f, indent=2)
 
-    saveRunData(dir, True)
+    saveRunData(dir, batch_runtime=dict(batch_runtime), rerun=True)
     print("The results.json is updated successfully after rerunning on different machine!")
 
 
@@ -447,14 +480,9 @@ def report_discrepancies(dirs):
                 run_data = json.load(f)
 
         for base_name, inputs in divergences.items():
-            first_entry = True
             for input_vals, compilers in inputs.items():
                 full_base_name_with_input = f"{base_name} {input_vals}"
-                if first_entry:
-                    report_lines.append(f"{full_base_name_with_input}\n")
-                    first_entry = False
-                else:
-                    report_lines.append(f"{' ' * (len(base_name) + len(input_vals) + 1)}\n")
+                report_lines.append(f"{full_base_name_with_input}\n")
                 for compiler, options in compilers.items():
                     for opt, result in options.items():
                         result_parts = result.split(" time:")
