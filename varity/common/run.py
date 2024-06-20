@@ -216,7 +216,7 @@ def saveResults(rootDir):
 
 
 
-def saveRunData(rootDir):
+def saveRunData(rootDir, rerun = False):
     num_groups = cfg.NUM_GROUPS
     tests_per_group = cfg.TESTS_PER_GROUP
     input_samples_per_run = cfg.INPUT_SAMPLES_PER_RUN
@@ -236,20 +236,22 @@ def saveRunData(rootDir):
         "Directory name": rootDir,
         "Created By": user,
         "Created at": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-        "Modified By": "",
-        "Modified at": "",
+        "Last Modified By": "",
+        "Last Modified at": "",
     }
 
-    # Problem in the folder path
-    run_data_file = os.path.join(os.getcwd(), "run_data.json")
+    if not rerun:
+        run_data_file = os.path.join(os.getcwd(), "run_data.json")
+    else:
+        run_data_file = os.path.join(os.getcwd(), rootDir, "run_data.json")
 
     if os.path.exists(run_data_file):
         with open(run_data_file, "r") as f:
             existing_data = json.load(f)
 
         # Update the existing data with the new modified info
-        existing_data["Modified By"] = user
-        existing_data["Modified at"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        existing_data["Last Modified By"] = user
+        existing_data["Last Modified at"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         run_data = existing_data
 
     with open(run_data_file, "w") as f:
@@ -337,7 +339,7 @@ def saved_run(dir):
     with open(results_file, "w") as f:
         json.dump(saved_results, f, indent=2)
 
-    # saveRunData(dir)
+    saveRunData(dir, True)
     print("The results.json is updated successfully after rerunning on different machine!")
 
 
