@@ -225,6 +225,9 @@ def saveRunData(rootDir, rerun=False):
     if not user:
         user = "Unknown User"
 
+    compilers = {name: path for name, path in cfg.COMPILERS}
+    optimization = cfg.OPT_LEVELS
+
     run_data = {
         "Number of groups": num_groups,
         "Tests per group": tests_per_group,
@@ -232,6 +235,8 @@ def saveRunData(rootDir, rerun=False):
         "Total programs": total_programs,
         "Total runs": total_runs,
         "Directory name": rootDir,
+        "Compilers": compilers,
+        "Optimization": optimization,
         "Created By": user,
         "Created at": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         "Last Modified By": "",
@@ -247,9 +252,16 @@ def saveRunData(rootDir, rerun=False):
         with open(run_data_file, "r") as f:
             existing_data = json.load(f)
 
-        # Update the existing data with the new modified info
         existing_data["Last Modified By"] = user
         existing_data["Last Modified at"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
+        existing_compilers = existing_data.get("Compilers", {})
+        for compiler, path in compilers.items():
+            if compiler not in existing_compilers:
+                existing_compilers[compiler] = path
+
+        existing_data["Compilers"] = existing_compilers
+        existing_data["Optimization"] = optimization
         run_data = existing_data
 
     with open(run_data_file, "w") as f:
@@ -413,7 +425,7 @@ def check_divergence(folder_path, compiler_one, compiler_two):
 
 def report_discrepancies(dirs):
     report_lines = []
-    header = "Base name\t\t\t\t\tCompiler\tOption\t\tResult\t\t\tTime\t\tInput\n"
+    header = "Base name with input\t\t\tCompiler\tOption\t\tResult\t\t\tTime\n"
     separator = "-" * 120 + "\n"
     report_lines.append(header)
     report_lines.append(separator)
@@ -435,20 +447,20 @@ def report_discrepancies(dirs):
                 run_data = json.load(f)
 
         for base_name, inputs in divergences.items():
-            report_lines.append(f"{base_name}\n")
             first_entry = True
             for input_vals, compilers in inputs.items():
+                full_base_name_with_input = f"{base_name} {input_vals}"
                 if first_entry:
-                    report_lines.append(f"{input_vals}\n")
+                    report_lines.append(f"{full_base_name_with_input}\n")
                     first_entry = False
                 else:
-                    report_lines.append(f"\t\t\t\t\t\t\t\t\t\t\t\t{input_vals}\n")
+                    report_lines.append(f"{' ' * (len(base_name) + len(input_vals) + 1)}\n")
                 for compiler, options in compilers.items():
                     for opt, result in options.items():
                         result_parts = result.split(" time:")
                         output = result_parts[0]
                         run_time = result_parts[1] if len(result_parts) > 1 else "N/A"
-                        report_lines.append(f"\t\t\t\t\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\n")
+                        report_lines.append(f"\t\t\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\n")
                 report_lines.append(separator)
             report_lines.append(separator)
 

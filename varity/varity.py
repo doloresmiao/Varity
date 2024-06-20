@@ -71,6 +71,10 @@ def getExtraOptimization(compiler_name, e: int):
     elif "xlc" in compiler_name:
         if e == 1:
             ret = "-qfloat=nomaf"
+    elif "hipcc" in compiler_name:
+        if e == 1:
+            ret = "--amdgpu-no-fma"
+        ret = ret + " --amdgpu-target=gfx906"
 
     return ret
 
@@ -92,18 +96,10 @@ def compileCode(config):
         if isHIPCompiler(compiler_name):
             fileName = fileName.replace(".c", ".hip")
 
-
         compilation_arguments = [compiler_path, op_level, more_ops, libs, "-o",
                                  fileName + "-" + compiler_name + op_level + extra_name + ".exe", fileName]
         cmd = " ".join(compilation_arguments)
-        # cmd = compiler_path + " " + op_level + " " + more_ops + " " + libs + " -o " + fileName + "-" + compiler_name + op_level + extra_name + ".exe " + fileName
-
-        # if isCUDACompiler(compiler_name):
-        #     cmd = cmd + "u"
-        #
-        # if isHIPCompiler(compiler_name):
-        #     cmd = cmd.replace(fileName, fileName.replace(".c", ".hip"))
-
+        
         out = subprocess.check_output(cmd, shell=True)
         os.chdir(pwd)
     except subprocess.CalledProcessError as outexc:
@@ -223,9 +219,9 @@ def main():
     args = parser.parse_args()
 
     if len(sys.argv) == 1:
-        dir = generateTests()
-        compileTests(dir)
-        runTests(dir)
+        working_directory = generateTests()
+        compileTests(working_directory)
+        runTests(working_directory)
     else:
         if args.generate:
             generateTests()
