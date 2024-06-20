@@ -67,14 +67,14 @@ def getExtraOptimization(compiler_name, e: int):
     elif "nvcc" in compiler_name:
         if e == 1:
             ret = "--fmad=false"
-        ret = ret + " -arch=sm_60"
+        ret = ret + " -arch=sm_70"
+    elif "hipcc" in compiler_name:
+        if e == 1:
+            ret = "-ffp-contract=off"
+        ret = ret + " --amdgpu-target=gfx90a"
     elif "xlc" in compiler_name:
         if e == 1:
             ret = "-qfloat=nomaf"
-    elif "hipcc" in compiler_name:
-        if e == 1:
-            ret = "--amdgpu-no-fma"
-        ret = ret + " --amdgpu-target=gfx906"
 
     return ret
 
@@ -99,7 +99,7 @@ def compileCode(config):
         compilation_arguments = [compiler_path, op_level, more_ops, libs, "-o",
                                  fileName + "-" + compiler_name + op_level + extra_name + ".exe", fileName]
         cmd = " ".join(compilation_arguments)
-        
+
         out = subprocess.check_output(cmd, shell=True)
         os.chdir(pwd)
     except subprocess.CalledProcessError as outexc:
