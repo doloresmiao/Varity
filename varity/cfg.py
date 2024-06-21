@@ -19,9 +19,9 @@ MATH_FUNC_PROBABILITY = 0.05
 NUM_GROUPS = 2
 
 # Number of tests per group
-TESTS_PER_GROUP = 500
+TESTS_PER_GROUP = 100
 
-# Set of commpilers to test.
+# Set of compilers to test.
 # COMPILERS is a list containing tuples (x, y), 
 # where x is a string with the compiler name, and y is the path to the compiler
 # COMPILERS = [("clang_80", "/usr/tce/packages/clang/clang-upstream-2019.03.26/bin/clang"), ("gcc_721", "/usr/tce/packages/gcc/gcc-7.2.1-redhat/bin/gcc"), ("xlc", "/usr/tce/packages/xl/xl-2019.02.07/bin/xlc"), ("nvcc_92", "/usr/tce/packages/cuda/cuda-9.2.148/bin/nvcc")]
@@ -34,10 +34,10 @@ COMPILERS = [("my_nvcc", "/usr/tce/packages/cuda/cuda-11.2.0/bin/nvcc")]
 # COMPILERS = [("my_hipcc", "/opt/rocm-6.0.3/bin/hipcc")]
 
 # Levels of optimization to try
-# OPT_LEVELS = [("-O0", 1), ("-O0", 0), ("-O1", 0), ("-O2", 0), ("-O3", 0)]
+OPT_LEVELS = [("-O0", 1), ("-O0", 0), ("-O1", 0), ("-O2", 0), ("-O3", 0)]
 # OPT_LEVELS = ["-O0", "-O1"]
 # OPT_LEVELS = [("-O0", 1), ("-O1", 0)]
-OPT_LEVELS = [("-O0", 1)]
+# OPT_LEVELS = [("-O0", 1)]
 # Name of root directory 
 TESTS_DIR = "_tests"
 
@@ -46,7 +46,7 @@ TESTS_DIR = "_tests"
 ###############################################################################
 
 # Number of random inputs per run
-INPUT_SAMPLES_PER_RUN = 4
+INPUT_SAMPLES_PER_RUN = 5
 
 ###############################################################################
 # Flaoting-point types
@@ -54,3 +54,6 @@ INPUT_SAMPLES_PER_RUN = 4
 
 REAL_TYPE = "double"
 # REAL_TYPE = "float"
+
+# Values to skip during divergence checks
+SKIP_VALUES = ["nan", "inf"]

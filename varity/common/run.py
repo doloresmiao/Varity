@@ -403,6 +403,8 @@ def check_divergence(folder_path, compiler_one, compiler_two):
     compiler_one_missing = True
     compiler_two_missing = True
 
+    skip = cfg.SKIP_VALUES
+
     for base_name, inputs in results.items():
         for input_vals, compilers in inputs.items():
             if compiler_one in compilers:
@@ -437,6 +439,9 @@ def check_divergence(folder_path, compiler_one, compiler_two):
                         else:
                             output_one = result_one
                             output_two = result_two
+
+                        if output_one in skip or output_two in skip:
+                            continue
 
                         if output_one != output_two:
                             if base_name not in divergences:
