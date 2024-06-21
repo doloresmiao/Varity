@@ -62,19 +62,21 @@ def spawnProc(config):
         res = out.decode('ascii')[:-1]
         lock.acquire()
 
-        if RECORD_RUNTIME:
-            if compiler_name not in batch_runtime:
-                batch_runtime[compiler_name] = 0
-            batch_runtime[compiler_name] += runtime
-            results.append(cmd + " " + res + " time:" + str(runtime))
-        else:
-            results.append(cmd + " " + res)
+        try:
+            if RECORD_RUNTIME:
+                if compiler_name not in batch_runtime:
+                    batch_runtime[compiler_name] = 0
+                batch_runtime[compiler_name] += runtime
+                results.append(cmd + " " + res + " time:" + str(runtime))
+            else:
+                results.append(cmd + " " + res)
+        finally:
+            lock.release()
 
-        lock.release()
     except subprocess.CalledProcessError as outexc:
-        print("\nError at runtime:", outexc.returncode, outexc.output)
+        print("\nError at runtime:", outexc.returncode, outexc.output.decode('ascii'))
         print("CMD", cmd)
-        exit()
+        exit(1)
 
 
 def runTests():
