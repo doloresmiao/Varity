@@ -462,6 +462,7 @@ def check_divergence(folder_path, compiler_one, compiler_two):
 
     print("Divergences saved to divergences.json!")
 
+
 def report_discrepancies(dirs):
     report_lines = []
     header = "Base name with input\t\t\tCompiler\tOption\t\tResult\t\t\tTime\n"
@@ -504,7 +505,7 @@ def report_discrepancies(dirs):
                         if idx == 0:
                             report_lines.append(f"\t\t\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\n")
                         else:
-                            report_lines.append(f"\t\t\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\n")
+                            report_lines.append(f"\t\t\t{compiler}\t\t{opt}\t\t{output}\t\t\t{run_time}\n")
                 report_lines.append(separator)
             report_lines.append(separator)
 

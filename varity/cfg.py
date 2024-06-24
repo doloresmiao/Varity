@@ -19,7 +19,7 @@ MATH_FUNC_PROBABILITY = 0.05
 NUM_GROUPS = 2
 
 # Number of tests per group
-TESTS_PER_GROUP = 2
+TESTS_PER_GROUP = 200
 
 # Set of compilers to test.
 # COMPILERS is a list containing tuples (x, y), 
@@ -29,14 +29,14 @@ TESTS_PER_GROUP = 2
 # COMPILERS = [("my_clang", "/usr/tce/packages/clang/clang-ibm-16.0.6-cuda-11.2.0-gcc-8.3.1/bin/clang"), ("my_gcc", "/usr/tcetmp/packages/base-gcc/base-gcc-8.3.1/bin/gcc"), ("my_nvcc", "/usr/tce/packages/cuda/cuda-11.2.0/bin/nvcc")]
 # COMPILERS = [("my_clang", "/usr/lib64/ccache/clang"), ("my_gcc", "/usr/tce/bin/gcc"), ("my_hipcc", "/opt/rocm-6.0.3/bin/hipcc")]
 # COMPILERS = [("my_clang", "/usr/bin/clang")]
-COMPILERS = [("my_clang", "/usr/bin/clang"), ("my_gcc", "/usr/bin/gcc"), ("my_hipcc", "/opt/rocm-6.0.3/bin/hipcc")]
-# COMPILERS = [("my_nvcc", "/usr/tce/packages/cuda/cuda-11.2.0/bin/nvcc")]
+# COMPILERS = [("my_clang", "/usr/bin/clang"), ("my_gcc", "/usr/bin/gcc"), ("my_hipcc", "/opt/rocm-6.0.3/bin/hipcc")]
+COMPILERS = [("my_nvcc", "/usr/tce/packages/cuda/cuda-11.2.0/bin/nvcc")]
 # COMPILERS = [("my_hipcc", "/opt/rocm-6.0.3/bin/hipcc")]
 
 # Levels of optimization to try
 # OPT_LEVELS = [("-O0", 1), ("-O0", 0), ("-O1", 0), ("-O2", 0), ("-O3", 0)]
 # OPT_LEVELS = ["-O0", "-O1"]
-OPT_LEVELS = [("-O0", 1), ("-O1", 0)]
+OPT_LEVELS = [("-O0", 1), ("-O0", 0)]
 # OPT_LEVELS = [("-O0", 1)]
 # Name of root directory 
 TESTS_DIR = "_tests"
@@ -49,13 +49,14 @@ TESTS_DIR = "_tests"
 INPUT_SAMPLES_PER_RUN = 4
 
 ###############################################################################
-# Flaoting-point types
+# Floating-point types
 ###############################################################################
 
 REAL_TYPE = "double"
 # REAL_TYPE = "float"
 
 # Values to skip during divergence checks
-# SKIP_VALUES = ["nan", "inf"]
-SKIP_VALUES = []
-RECORD_RUNTIME = False
+SKIP_VALUES = ["nan", "inf"]
+# SKIP_VALUES = []
+# RECORD_RUNTIME = False
+RECORD_RUNTIME = True
