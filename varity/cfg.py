@@ -36,8 +36,8 @@ COMPILERS = [("my_clang", "/usr/bin/clang"), ("my_gcc", "/usr/bin/gcc"), ("my_hi
 # Levels of optimization to try
 # OPT_LEVELS = [("-O0", 1), ("-O0", 0), ("-O1", 0), ("-O2", 0), ("-O3", 0)]
 # OPT_LEVELS = ["-O0", "-O1"]
-# OPT_LEVELS = [("-O0", 1), ("-O1", 0)]
-OPT_LEVELS = [("-O0", 1)]
+OPT_LEVELS = [("-O0", 1), ("-O1", 0)]
+# OPT_LEVELS = [("-O0", 1)]
 # Name of root directory 
 TESTS_DIR = "_tests"
 

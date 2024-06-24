@@ -462,7 +462,6 @@ def check_divergence(folder_path, compiler_one, compiler_two):
 
     print("Divergences saved to divergences.json!")
 
-
 def report_discrepancies(dirs):
     report_lines = []
     header = "Base name with input\t\t\tCompiler\tOption\t\tResult\t\t\tTime\n"
@@ -490,12 +489,22 @@ def report_discrepancies(dirs):
             for input_vals, compilers in inputs.items():
                 full_base_name_with_input = f"{base_name} {input_vals}"
                 report_lines.append(f"{full_base_name_with_input}\n")
+                grouped_by_option = {}
                 for compiler, options in compilers.items():
                     for opt, result in options.items():
+                        if opt not in grouped_by_option:
+                            grouped_by_option[opt] = []
                         result_parts = result.split(" time:")
                         output = result_parts[0]
                         run_time = result_parts[1] if len(result_parts) > 1 else "N/A"
-                        report_lines.append(f"\t\t\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\n")
+                        grouped_by_option[opt].append((compiler, output, run_time))
+
+                for opt, entries in grouped_by_option.items():
+                    for idx, (compiler, output, run_time) in enumerate(entries):
+                        if idx == 0:
+                            report_lines.append(f"\t\t\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\n")
+                        else:
+                            report_lines.append(f"\t\t\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\n")
                 report_lines.append(separator)
             report_lines.append(separator)
 
