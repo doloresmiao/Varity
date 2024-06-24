@@ -503,9 +503,9 @@ def report_discrepancies(dirs):
                 for opt, entries in grouped_by_option.items():
                     for idx, (compiler, output, run_time) in enumerate(entries):
                         if idx == 0:
-                            report_lines.append(f"\t\t\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\n")
-                        else:
                             report_lines.append(f"\t\t\t{compiler}\t\t{opt}\t\t{output}\t\t\t{run_time}\n")
+                        else:
+                            report_lines.append(f"\t\t\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\n")
                 report_lines.append(separator)
             report_lines.append(separator)
 
