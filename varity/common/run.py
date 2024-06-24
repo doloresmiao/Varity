@@ -13,7 +13,7 @@ from type_checking import isTypeReal, isTypeRealPointer
 
 PROG_PER_TEST = {}
 PROG_RESULTS = {}
-RECORD_RUNTIME = True
+RECORD_RUNTIME = cfg.RECORD_RUNTIME
 
 
 def getInputTypes(fullProgName):
