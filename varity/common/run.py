@@ -407,6 +407,21 @@ def check_divergence(folder_path, compiler_one, compiler_two):
 
     skip = cfg.SKIP_VALUES
 
+    def is_skipped_value(first_op, second_op):
+        if first_op == "0" and second_op == "-0":
+            return True
+        if first_op == "-0" and second_op == "0":
+            return True
+        if first_op == "nan" and second_op == "-nan":
+            return True
+        if first_op == "-nan" and second_op == "nan":
+            return True
+        if first_op == "inf" and second_op == "-inf":
+            return True
+        if first_op == "-inf" and second_op == "inf":
+            return True
+        return False
+
     for base_name, inputs in results.items():
         for input_vals, compilers in inputs.items():
             if compiler_one in compilers:
@@ -442,7 +457,7 @@ def check_divergence(folder_path, compiler_one, compiler_two):
                             output_one = result_one
                             output_two = result_two
 
-                        if output_one in skip or output_two in skip:
+                        if skip and is_skipped_value(output_one, output_two):
                             continue
 
                         if output_one != output_two:
