@@ -30,13 +30,13 @@ TESTS_PER_GROUP = 200
 # COMPILERS = [("my_clang", "/usr/lib64/ccache/clang"), ("my_gcc", "/usr/tce/bin/gcc"), ("my_hipcc", "/opt/rocm-6.0.3/bin/hipcc")]
 # COMPILERS = [("my_clang", "/usr/bin/clang")]
 # COMPILERS = [("my_clang", "/usr/bin/clang"), ("my_gcc", "/usr/bin/gcc"), ("my_hipcc", "/opt/rocm-6.0.3/bin/hipcc")]
-COMPILERS = [("my_nvcc", "/usr/tce/packages/cuda/cuda-11.2.0/bin/nvcc")]
-# COMPILERS = [("my_hipcc", "/opt/rocm-6.0.3/bin/hipcc")]
+COMPILERS = [("my_nvcc", "/usr/tce/packages/cuda/cuda-12.2.2/bin/nvcc")]
+# COMPILERS = [("my_hipcc", "/opt/rocm-6.1.2/bin/hipcc")]
 
 # Levels of optimization to try
-# OPT_LEVELS = [("-O0", 1), ("-O0", 0), ("-O1", 0), ("-O2", 0), ("-O3", 0)]
+OPT_LEVELS = [("-O0", 0), ("-O1", 0), ("-O2", 0), ("-O3", 0), ("-O3", 2)]
 # OPT_LEVELS = ["-O0", "-O1"]
-OPT_LEVELS = [("-O0", 1), ("-O0", 0)]
+# OPT_LEVELS = [("-O0", 1), ("-O0", 0)]
 # OPT_LEVELS = [("-O0", 1)]
 # Name of root directory 
 TESTS_DIR = "_tests"
@@ -46,7 +46,7 @@ TESTS_DIR = "_tests"
 ###############################################################################
 
 # Number of random inputs per run
-INPUT_SAMPLES_PER_RUN = 4
+INPUT_SAMPLES_PER_RUN = 10
 
 ###############################################################################
 # Floating-point types

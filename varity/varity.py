@@ -55,26 +55,38 @@ def getExtraOptimization(compiler_name, e: int):
     if "clang" in compiler_name:
         if e == 1:
             ret = "-ffp-contract=off"
+        elif e == 2:
+            ret = "-ffast-math"
         ret = ret + " -std=c99"
     elif "gcc" in compiler_name:
         if e == 1:
             ret = "-ffp-contract=off"
+        elif e == 2:
+            ret = "-ffast-math"
         ret = ret + " -std=c99"
     elif "pgi" in compiler_name:
         if e == 1:
             ret = "-nofma"
+        elif e == 2:
+            ret = "-fast"
         ret = ret + " -c99"
     elif "nvcc" in compiler_name:
         if e == 1:
             ret = "--fmad=false"
+        elif e == 2:
+            ret = "--use_fast_math"
         ret = ret + " -arch=sm_70"
     elif "hipcc" in compiler_name:
         if e == 1:
             ret = "-ffp-contract=off"
+        elif e == 2:
+            ret = "--fast-math"
         ret = ret + " --amdgpu-target=gfx90a"
     elif "xlc" in compiler_name:
         if e == 1:
             ret = "-qfloat=nomaf"
+        elif e == 2:
+            ret = "-qhot=fastmath"
 
     return ret
 
@@ -89,6 +101,8 @@ def compileCode(config):
         extra_name = ""
         if other_op == 1:
             extra_name = "_nofma"
+        elif other_op == 2:
+            extra_name = "_fast"
 
         if isCUDACompiler(compiler_name):
             fileName = fileName + "u"
