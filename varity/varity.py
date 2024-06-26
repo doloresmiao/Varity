@@ -80,13 +80,13 @@ def getExtraOptimization(compiler_name, e: int):
         if e == 1:
             ret = "-ffp-contract=off"
         elif e == 2:
-            ret = "--fast-math"
+            ret = "-ffast-math"
         ret = ret + " --amdgpu-target=gfx90a"
     elif "xlc" in compiler_name:
         if e == 1:
             ret = "-qfloat=nomaf"
         elif e == 2:
-            ret = "-qhot=fastmath"
+            ret = "-qfastmath"
 
     return ret
 

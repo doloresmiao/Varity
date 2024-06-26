@@ -485,6 +485,11 @@ def report_discrepancies(dirs):
     report_lines.append(header)
     report_lines.append(separator)
 
+    total_programs = 0
+    total_runs = 0
+    total_discrepancies = 0
+    discrepancies_per_option = {}
+
     for dir in dirs:
         divergences_file = os.path.join(dir, "divergences.json")
         run_data_file = os.path.join(dir, "run_data.json")
@@ -496,10 +501,11 @@ def report_discrepancies(dirs):
         with open(divergences_file, "r") as f:
             divergences = json.load(f)
 
-        run_data = {}
         if os.path.exists(run_data_file):
             with open(run_data_file, "r") as f:
                 run_data = json.load(f)
+                total_programs += run_data.get("Total programs", 0)
+                total_runs += run_data.get("Total runs", 0)
 
         for base_name, inputs in divergences.items():
             for input_vals, compilers in inputs.items():
@@ -516,19 +522,39 @@ def report_discrepancies(dirs):
                         grouped_by_option[opt].append((compiler, output, run_time))
 
                 for opt, entries in grouped_by_option.items():
+                    if opt not in discrepancies_per_option:
+                        discrepancies_per_option[opt] = 0
+                    discrepancies_per_option[opt] += len(entries)
+                    total_discrepancies += len(entries)
                     for idx, (compiler, output, run_time) in enumerate(entries):
                         if idx == 0:
-                            report_lines.append(f"\t\t\t{compiler}\t\t{opt}\t\t{output}\t\t\t{run_time}\n")
+                            report_lines.append(f"\t\t\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\n")
                         else:
                             report_lines.append(f"\t\t\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\n")
                 report_lines.append(separator)
             report_lines.append(separator)
 
+    total_discrepancies = total_discrepancies // 2
+    discrepancies_per_option = {opt: count // 2 for opt, count in discrepancies_per_option.items()}
+
+    summary = {
+        "Total Programs": total_programs,
+        "Total Runs": total_runs,
+        "Total Discrepancies": total_discrepancies,
+        "Discrepancies per Option": discrepancies_per_option,
+        "Discrepancies": divergences
+    }
+
     report_file = "discrepancy_report.txt"
     with open(report_file, "w") as f:
         f.writelines(report_lines)
 
+    summary_file = "discrepancy_summary.json"
+    with open(summary_file, "w") as f:
+        json.dump(summary, f, indent=2)
+
     print(f"Discrepancy report generated and saved as {report_file}.")
+    print(f"Discrepancy summary generated and saved as {summary_file}.")
 
 
 if __name__ == "__main__":
