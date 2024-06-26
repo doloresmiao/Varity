@@ -19,7 +19,7 @@ MATH_FUNC_PROBABILITY = 0.05
 NUM_GROUPS = 2
 
 # Number of tests per group
-TESTS_PER_GROUP = 200
+TESTS_PER_GROUP = 250
 
 # Set of compilers to test.
 # COMPILERS is a list containing tuples (x, y), 
@@ -56,7 +56,7 @@ REAL_TYPE = "double"
 # REAL_TYPE = "float"
 
 # Values to skip during divergence checks
-SKIP_VALUES = ["nan", "inf"]
-# SKIP_VALUES = []
+SKIP_VALUES = True
+# SKIP_VALUES = False
 # RECORD_RUNTIME = False
 RECORD_RUNTIME = True

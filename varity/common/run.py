@@ -478,6 +478,37 @@ def check_divergence(folder_path, compiler_one, compiler_two):
     print("Divergences saved to divergences.json!")
 
 
+def categorize_discrepancy(output_one, output_two):
+    def categorize(value):
+        value_lower = value.lower()
+        if value_lower in ["nan", "-nan"]:
+            return "nan"
+        elif value_lower in ["inf", "+inf", "-inf"]:
+            return "inf"
+        elif value_lower == "0" or value_lower == "-0":
+            return "zero"
+        else:
+            return "num"
+
+    category_one = categorize(output_one)
+    category_two = categorize(output_two)
+
+    if (category_one == "nan" and category_two == "inf") or (category_one == "inf" and category_two == "nan"):
+        return "nan_vs_inf"
+    elif (category_one == "nan" and category_two == "zero") or (category_one == "zero" and category_two == "nan"):
+        return "nan_vs_zero"
+    elif (category_one == "nan" and category_two == "num") or (category_one == "num" and category_two == "nan"):
+        return "nan_vs_num"
+    elif (category_one == "inf" and category_two == "zero") or (category_one == "zero" and category_two == "inf"):
+        return "inf_vs_zero"
+    elif (category_one == "inf" and category_two == "num") or (category_one == "num" and category_two == "inf"):
+        return "inf_vs_num"
+    elif (category_one == "num" and category_two == "zero") or (category_one == "zero" and category_two == "num"):
+        return "num_vs_zero"
+    else:
+        return "num_vs_num"
+
+
 def report_discrepancies(dirs):
     report_lines = []
     header = "Base name with input\t\t\tCompiler\tOption\t\tResult\t\t\tTime\n"
@@ -489,6 +520,7 @@ def report_discrepancies(dirs):
     total_runs = 0
     total_discrepancies = 0
     discrepancies_per_option = {}
+    divergences = {}
 
     for dir in dirs:
         divergences_file = os.path.join(dir, "divergences.json")
@@ -499,7 +531,7 @@ def report_discrepancies(dirs):
             continue
 
         with open(divergences_file, "r") as f:
-            divergences = json.load(f)
+            divergences.update(json.load(f))
 
         if os.path.exists(run_data_file):
             with open(run_data_file, "r") as f:
@@ -523,19 +555,37 @@ def report_discrepancies(dirs):
 
                 for opt, entries in grouped_by_option.items():
                     if opt not in discrepancies_per_option:
-                        discrepancies_per_option[opt] = 0
-                    discrepancies_per_option[opt] += len(entries)
+                        discrepancies_per_option[opt] = {
+                            "total": 0,
+                            "nan_vs_inf": 0,
+                            "nan_vs_zero": 0,
+                            "nan_vs_num": 0,
+                            "inf_vs_zero": 0,
+                            "inf_vs_num": 0,
+                            "num_vs_zero": 0,
+                            "num_vs_num": 0,
+                        }
+
+                    discrepancies_per_option[opt]["total"] += len(entries)
                     total_discrepancies += len(entries)
+
                     for idx, (compiler, output, run_time) in enumerate(entries):
                         if idx == 0:
                             report_lines.append(f"\t\t\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\n")
                         else:
                             report_lines.append(f"\t\t\t{compiler}\t{opt}\t\t{output}\t\t\t{run_time}\n")
+
+                        if idx > 0:
+                            previous_compiler, previous_output, _ = entries[idx - 1]
+                            category = categorize_discrepancy(previous_output, output)
+                            discrepancies_per_option[opt][category] += 1
+
                 report_lines.append(separator)
             report_lines.append(separator)
 
-    total_discrepancies = total_discrepancies // 2
-    discrepancies_per_option = {opt: count // 2 for opt, count in discrepancies_per_option.items()}
+    total_discrepancies //= 2
+    discrepancies_per_option = {opt: {**val, "total": val["total"] // 2} for opt, val in
+                                discrepancies_per_option.items()}
 
     summary = {
         "Total Programs": total_programs,
