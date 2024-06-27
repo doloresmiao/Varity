@@ -72,9 +72,9 @@ def getExtraOptimization(compiler_name, e: int):
         ret = ret + " -c99"
     elif "nvcc" in compiler_name:
         if e == 1:
-            ret = "--fmad=false"
+            ret = "-fmad=false"
         elif e == 2:
-            ret = "--use_fast_math"
+            ret = "-use_fast_math"
         ret = ret + " -arch=sm_70"
     elif "hipcc" in compiler_name:
         if e == 1:
