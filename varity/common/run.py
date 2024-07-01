@@ -589,7 +589,8 @@ def report_discrepancies(dirs):
 
     summary = {
         "Total Programs": total_programs,
-        "Total Runs": total_runs,
+        "Total Runs per Option": total_runs,
+        "Total Runs": total_runs * len(discrepancies_per_option),
         "Total Discrepancies": total_discrepancies,
         "Discrepancies per Option": discrepancies_per_option,
         "Discrepancies": divergences

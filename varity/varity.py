@@ -80,10 +80,12 @@ def getExtraOptimization(compiler_name, e: int):
         if e == 1:
             ret = "-ffp-contract=off"
         elif e == 2:
-            # ret = "-ffast-math" ret = "-fno-math-errno -funsafe-math-optimizations -fno-trapping-math
+            # ret = "-ffast-math"
+            # ret = "-ffast-math -fno-finite-math-only"
+            # ret = "-fno-math-errno -funsafe-math-optimizations -fno-trapping-math
             # -fassociative-math -freciprocal-math -fno-signed-zeros -fno-rounding-math"
             ret = "-DHIP_FAST_MATH"
-        ret = ret + " --amdgpu-target=gfx90a"
+        ret = ret + " --offload-arch=gfx90a"
     elif "xlc" in compiler_name:
         if e == 1:
             ret = "-qfloat=nomaf"
