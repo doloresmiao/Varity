@@ -521,6 +521,7 @@ def report_discrepancies(dirs):
     total_discrepancies = 0
     discrepancies_per_option = {}
     divergences = {}
+    compilers_set = set()
 
     for dir in dirs:
         divergences_file = os.path.join(dir, "divergences.json")
@@ -545,6 +546,7 @@ def report_discrepancies(dirs):
                 report_lines.append(f"{full_base_name_with_input}\n")
                 grouped_by_option = {}
                 for compiler, options in compilers.items():
+                    compilers_set.add(compiler)
                     for opt, result in options.items():
                         if opt not in grouped_by_option:
                             grouped_by_option[opt] = []
@@ -587,10 +589,13 @@ def report_discrepancies(dirs):
     discrepancies_per_option = {opt: {**val, "total": val["total"] // 2} for opt, val in
                                 discrepancies_per_option.items()}
 
+    number_of_compilers = len(compilers_set)
+
     summary = {
         "Total Programs": total_programs,
-        "Total Runs per Option": total_runs,
-        "Total Runs": total_runs * len(discrepancies_per_option),
+        "Total Runs per Option per Compiler": total_runs,
+        "Total Runs per Option": total_runs * number_of_compilers,
+        "Total Runs": total_runs * number_of_compilers * len(discrepancies_per_option),
         "Total Discrepancies": total_discrepancies,
         "Discrepancies per Option": discrepancies_per_option,
         "Discrepancies": divergences
