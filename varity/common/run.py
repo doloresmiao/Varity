@@ -559,20 +559,20 @@ def report_discrepancies(dirs):
                     if opt not in discrepancies_per_option:
                         discrepancies_per_option[opt] = {
                             "total": 0,
-                            "nan_vs_inf": {"total": 0, "nan": {"my_nvcc": 0, "my_hipcc": 0},
-                                           "inf": {"my_nvcc": 0, "my_hipcc": 0}},
-                            "nan_vs_zero": {"total": 0, "nan": {"my_nvcc": 0, "my_hipcc": 0},
-                                            "zero": {"my_nvcc": 0, "my_hipcc": 0}},
-                            "nan_vs_num": {"total": 0, "nan": {"my_nvcc": 0, "my_hipcc": 0},
-                                           "num": {"my_nvcc": 0, "my_hipcc": 0}},
-                            "inf_vs_zero": {"total": 0, "inf": {"my_nvcc": 0, "my_hipcc": 0},
-                                            "zero": {"my_nvcc": 0, "my_hipcc": 0}},
-                            "inf_vs_num": {"total": 0, "inf": {"my_nvcc": 0, "my_hipcc": 0},
-                                           "num": {"my_nvcc": 0, "my_hipcc": 0}},
-                            "num_vs_zero": {"total": 0, "num": {"my_nvcc": 0, "my_hipcc": 0},
-                                            "zero": {"my_nvcc": 0, "my_hipcc": 0}},
-                            "num_vs_num": {"total": 0, "num": {"my_nvcc": 0, "my_hipcc": 0},
-                                           "num2": {"my_nvcc": 0, "my_hipcc": 0}},
+                            "nan_vs_inf": {"total": 0, "nan": {compiler: 0 for compiler in compilers_set},
+                                           "inf": {compiler: 0 for compiler in compilers_set}},
+                            "nan_vs_zero": {"total": 0, "nan": {compiler: 0 for compiler in compilers_set},
+                                            "zero": {compiler: 0 for compiler in compilers_set}},
+                            "nan_vs_num": {"total": 0, "nan": {compiler: 0 for compiler in compilers_set},
+                                           "num": {compiler: 0 for compiler in compilers_set}},
+                            "inf_vs_zero": {"total": 0, "inf": {compiler: 0 for compiler in compilers_set},
+                                            "zero": {compiler: 0 for compiler in compilers_set}},
+                            "inf_vs_num": {"total": 0, "inf": {compiler: 0 for compiler in compilers_set},
+                                           "num": {compiler: 0 for compiler in compilers_set}},
+                            "num_vs_zero": {"total": 0, "num": {compiler: 0 for compiler in compilers_set},
+                                            "zero": {compiler: 0 for compiler in compilers_set}},
+                            "num_vs_num": {"total": 0, "num": {compiler: 0 for compiler in compilers_set},
+                                           "num2": {compiler: 0 for compiler in compilers_set}},
                         }
 
                     discrepancies_per_option[opt]["total"] += len(entries)
@@ -597,6 +597,10 @@ def report_discrepancies(dirs):
     total_discrepancies //= 2
     discrepancies_per_option = {opt: {**val, "total": val["total"] // 2} for opt, val in
                                 discrepancies_per_option.items()}
+
+    for opt in discrepancies_per_option:
+        if "num_vs_num" in discrepancies_per_option[opt]:
+            discrepancies_per_option[opt]["num_vs_num"]["num2"] = discrepancies_per_option[opt]["num_vs_num"]["num"]
 
     number_of_compilers = len(compilers_set)
 
