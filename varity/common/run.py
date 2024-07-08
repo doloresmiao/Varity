@@ -590,7 +590,10 @@ def report_discrepancies(dirs):
                             discrepancies_per_option[opt][category]["total"] += 1
                             discrepancies_per_option[opt][category][cat_one][previous_compiler] += 1
                             discrepancies_per_option[opt][category][cat_two][compiler] += 1
-
+                            if category == "num_vs_num":
+                                discrepancies_per_option[opt][category][cat_two][previous_compiler] += 1
+                                discrepancies_per_option[opt][category][cat_one][compiler] += 1
+                                
                 report_lines.append(separator)
             report_lines.append(separator)
 
