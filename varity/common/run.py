@@ -506,7 +506,7 @@ def categorize_discrepancy(output_one, output_two):
     elif (category_one == "num" and category_two == "zero") or (category_one == "zero" and category_two == "num"):
         return "num_vs_zero", category_one, category_two
     else:
-        return "num_vs_num", category_one, category_two
+        return "num_vs_num", "num1", "num2"
 
 
 def report_discrepancies(dirs):
@@ -571,7 +571,7 @@ def report_discrepancies(dirs):
                                            "num": {compiler: 0 for compiler in compilers_set}},
                             "num_vs_zero": {"total": 0, "num": {compiler: 0 for compiler in compilers_set},
                                             "zero": {compiler: 0 for compiler in compilers_set}},
-                            "num_vs_num": {"total": 0, "num": {compiler: 0 for compiler in compilers_set},
+                            "num_vs_num": {"total": 0, "num1": {compiler: 0 for compiler in compilers_set},
                                            "num2": {compiler: 0 for compiler in compilers_set}},
                         }
 
@@ -597,10 +597,6 @@ def report_discrepancies(dirs):
     total_discrepancies //= 2
     discrepancies_per_option = {opt: {**val, "total": val["total"] // 2} for opt, val in
                                 discrepancies_per_option.items()}
-
-    for opt in discrepancies_per_option:
-        if "num_vs_num" in discrepancies_per_option[opt]:
-            discrepancies_per_option[opt]["num_vs_num"]["num2"] = discrepancies_per_option[opt]["num_vs_num"]["num"]
 
     number_of_compilers = len(compilers_set)
 
