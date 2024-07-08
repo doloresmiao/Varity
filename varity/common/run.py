@@ -494,19 +494,19 @@ def categorize_discrepancy(output_one, output_two):
     category_two = categorize(output_two)
 
     if (category_one == "nan" and category_two == "inf") or (category_one == "inf" and category_two == "nan"):
-        return "nan_vs_inf"
+        return "nan_vs_inf", category_one, category_two
     elif (category_one == "nan" and category_two == "zero") or (category_one == "zero" and category_two == "nan"):
-        return "nan_vs_zero"
+        return "nan_vs_zero", category_one, category_two
     elif (category_one == "nan" and category_two == "num") or (category_one == "num" and category_two == "nan"):
-        return "nan_vs_num"
+        return "nan_vs_num", category_one, category_two
     elif (category_one == "inf" and category_two == "zero") or (category_one == "zero" and category_two == "inf"):
-        return "inf_vs_zero"
+        return "inf_vs_zero", category_one, category_two
     elif (category_one == "inf" and category_two == "num") or (category_one == "num" and category_two == "inf"):
-        return "inf_vs_num"
+        return "inf_vs_num", category_one, category_two
     elif (category_one == "num" and category_two == "zero") or (category_one == "zero" and category_two == "num"):
-        return "num_vs_zero"
+        return "num_vs_zero", category_one, category_two
     else:
-        return "num_vs_num"
+        return "num_vs_num", category_one, category_two
 
 
 def report_discrepancies(dirs):
@@ -559,13 +559,20 @@ def report_discrepancies(dirs):
                     if opt not in discrepancies_per_option:
                         discrepancies_per_option[opt] = {
                             "total": 0,
-                            "nan_vs_inf": 0,
-                            "nan_vs_zero": 0,
-                            "nan_vs_num": 0,
-                            "inf_vs_zero": 0,
-                            "inf_vs_num": 0,
-                            "num_vs_zero": 0,
-                            "num_vs_num": 0,
+                            "nan_vs_inf": {"total": 0, "nan": {"my_nvcc": 0, "my_hipcc": 0},
+                                           "inf": {"my_nvcc": 0, "my_hipcc": 0}},
+                            "nan_vs_zero": {"total": 0, "nan": {"my_nvcc": 0, "my_hipcc": 0},
+                                            "zero": {"my_nvcc": 0, "my_hipcc": 0}},
+                            "nan_vs_num": {"total": 0, "nan": {"my_nvcc": 0, "my_hipcc": 0},
+                                           "num": {"my_nvcc": 0, "my_hipcc": 0}},
+                            "inf_vs_zero": {"total": 0, "inf": {"my_nvcc": 0, "my_hipcc": 0},
+                                            "zero": {"my_nvcc": 0, "my_hipcc": 0}},
+                            "inf_vs_num": {"total": 0, "inf": {"my_nvcc": 0, "my_hipcc": 0},
+                                           "num": {"my_nvcc": 0, "my_hipcc": 0}},
+                            "num_vs_zero": {"total": 0, "num": {"my_nvcc": 0, "my_hipcc": 0},
+                                            "zero": {"my_nvcc": 0, "my_hipcc": 0}},
+                            "num_vs_num": {"total": 0, "num": {"my_nvcc": 0, "my_hipcc": 0},
+                                           "num2": {"my_nvcc": 0, "my_hipcc": 0}},
                         }
 
                     discrepancies_per_option[opt]["total"] += len(entries)
@@ -579,8 +586,10 @@ def report_discrepancies(dirs):
 
                         if idx > 0:
                             previous_compiler, previous_output, _ = entries[idx - 1]
-                            category = categorize_discrepancy(previous_output, output)
-                            discrepancies_per_option[opt][category] += 1
+                            category, cat_one, cat_two = categorize_discrepancy(previous_output, output)
+                            discrepancies_per_option[opt][category]["total"] += 1
+                            discrepancies_per_option[opt][category][cat_one][previous_compiler] += 1
+                            discrepancies_per_option[opt][category][cat_two][compiler] += 1
 
                 report_lines.append(separator)
             report_lines.append(separator)
