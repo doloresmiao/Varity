@@ -449,10 +449,18 @@ class Program():
             ret += "        printf(\"cudaMalloc failed: %s\\n\", cudaGetErrorString(err));\n"
             ret += "        return NULL;\n"
             ret += "    }\n"
-            ret += "    double temp[" + str(cfg.ARRAY_SIZE) + "];\n"
+            if cfg.REAL_TYPE == "double":
+                ret += "    double temp[" + str(cfg.ARRAY_SIZE) + "];\n"
+            else:
+                ret += "    float temp[" + str(cfg.ARRAY_SIZE) + "];\n"
             ret += "    for(int i=0; i < " + str(cfg.ARRAY_SIZE) + "; ++i)\n"
             ret += "        temp[i] = v;\n"
-            ret += "    cudaMemcpy(ret, temp, sizeof(double) * " + str(cfg.ARRAY_SIZE) + ", cudaMemcpyHostToDevice);\n"
+            if cfg.REAL_TYPE == "double":
+                ret += "    cudaMemcpy(ret, temp, sizeof(double) * " + str(
+                    cfg.ARRAY_SIZE) + ", cudaMemcpyHostToDevice);\n"
+            else:
+                ret += "    cudaMemcpy(ret, temp, sizeof(float) * " + str(
+                    cfg.ARRAY_SIZE) + ", cudaMemcpyHostToDevice);\n"
             ret += "    return ret;\n"
             ret += "}"
         elif self.hip:
@@ -464,11 +472,18 @@ class Program():
             ret += "        printf(\"hipMalloc failed: %s\\n\", hipGetErrorString(err));\n"
             ret += "        return NULL;\n"
             ret += "    }\n"
-            ret += "    double temp[" + str(cfg.ARRAY_SIZE) + "];\n"
+            if cfg.REAL_TYPE == "double":
+                ret += "    double temp[" + str(cfg.ARRAY_SIZE) + "];\n"
+            else:
+                ret += "    float temp[" + str(cfg.ARRAY_SIZE) + "];\n"
             ret += "    for(int i=0; i < " + str(cfg.ARRAY_SIZE) + "; ++i)\n"
             ret += "        temp[i] = v;\n"
-            ret += "    err = hipMemcpy(ret, temp, sizeof(double) * " + str(
-                cfg.ARRAY_SIZE) + ", hipMemcpyHostToDevice);\n"
+            if cfg.REAL_TYPE == "double":
+                ret += "    err = hipMemcpy(ret, temp, sizeof(double) * " + str(
+                    cfg.ARRAY_SIZE) + ", hipMemcpyHostToDevice);\n"
+            else:
+                ret += "    err = hipMemcpy(ret, temp, sizeof(float) * " + str(
+                    cfg.ARRAY_SIZE) + ", hipMemcpyHostToDevice);\n"
             ret += "    if (err != hipSuccess) {\n"
             ret += "        printf(\"hipMemcpy failed: %s\", hipGetErrorString(err));\n"
             ret += "        return NULL;\n"
