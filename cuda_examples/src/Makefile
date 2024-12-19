@@ -21,3 +21,14 @@ clean:
 			echo "No Makefile in $$dir, skipping clean"; \
 		fi; \
 	done
+
+# Run target: run make run in all subdirectories
+run:
+	@for dir in $(SUBDIRS); do \
+		if [ -f "$$dir/Makefile" ]; then \
+			echo "Running in $$dir"; \
+			$(MAKE) -C $$dir run; \
+		else \
+			echo "No Makefile in $$dir, skipping clean"; \
+		fi; \
+	done
