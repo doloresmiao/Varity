@@ -18,6 +18,10 @@ float* initPointer(float v) {
   float *ret = (float*) malloc(sizeof(float)*10);
   for(int i=0; i < 10; ++i)
     ret[i] = v;
+  float* d_ret;
+  hipMalloc((void**)&d_ret, sizeof(float)*10);
+  hipMemcpy(d_ret, ret, sizeof(float)*10, hipMemcpyHostToDevice);
+  ret = d_ret;
   return ret;
 }
 
